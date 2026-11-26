@@ -210,6 +210,9 @@ export async function captureEphemeralViewport(
   })
 
   const dataUrl = await blobToResizedDataUrl(captured.blob, MAX_PICTURE_EDGE)
+  if (options.signal?.aborted) {
+    throw new Error('已取消 3D 视图截取。')
+  }
   return { dataUrl, width: captured.width, height: captured.height }
 }
 
