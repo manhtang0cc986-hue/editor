@@ -12,6 +12,7 @@ import {
 } from '@pascal-app/core'
 import {
   assetViewNeeds,
+  catalogReads,
   createAssetViewLoader,
   createFetchAssetViewIO,
   readCatalog,
@@ -462,7 +463,9 @@ export async function executeHouseAgentTool(
 
   const before = getSceneDocument()
   const activeLevelId = useViewer.getState().selection.levelId
-  const catalog = await getLocalAwareCatalog()
+  const catalogNeeds = catalogReads(before.nodes, name, parsed.data)
+  const catalog =
+    catalogNeeds.ids.length || catalogNeeds.searches.length ? await getLocalAwareCatalog() : []
   const catalogContext = await readCatalog(before.nodes, name, parsed.data, catalog)
   const needs = assetViewNeeds(before.nodes, name, parsed.data, { catalog })
   const assetViews =

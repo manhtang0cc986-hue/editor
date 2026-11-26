@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test'
-import { activityGroups, selectionContext } from './house-agent-workflow'
+import { BuildingNode, LevelNode, WallNode } from '@pascal-app/core/schema'
+import { activityGroups, houseAgentSceneContext, selectionContext } from './house-agent-workflow'
 
 test('selection attaches live ids and active level while excluding stale selection', () => {
   const nodes = {
@@ -43,4 +44,30 @@ test('activity preserves phase order including a return to construction after in
   expect(groups.map((group) => group.phase)).toEqual(['structure', 'check', 'structure', 'furnish'])
   expect(groups[0]?.created).toEqual({ wall: 4, zone: 1 })
   expect(groups[2]?.created).toEqual({})
+})
+
+test('a modeling request includes current level IDs and counts without modifying the brief', () => {
+  const building = BuildingNode.parse({ id: 'building_main' })
+  const level = LevelNode.parse({
+    id: 'level_ground',
+    parentId: building.id,
+    name: 'Ground floor',
+    height: 3,
+  })
+  const wall = WallNode.parse({ id: 'wall_a', parentId: level.id, start: [0, 0], end: [5, 0] })
+  expect(
+    houseAgentSceneContext(
+      { [building.id]: building, [level.id]: level, [wall.id]: wall },
+      { levelId: level.id, zoneId: null, selectedIds: [] },
+    ),
+  ).toEqual({
+    activeLevelId: level.id,
+    selected: [],
+    buildingCount: 1,
+    levelCount: 1,
+    levels: [{ id: level.id, buildingId: building.id, name: 'Ground floor', index: 0, height: 3 }],
+    wallCount: 1,
+    roomCount: 0,
+    guideCount: 0,
+  })
 })

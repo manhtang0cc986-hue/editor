@@ -45,7 +45,7 @@ import {
   type HouseAgentToolEvent,
   runHouseAgent,
 } from '@/lib/house-agent-runner'
-import { selectionContext } from '@/lib/house-agent-workflow'
+import { houseAgentSceneContext } from '@/lib/house-agent-workflow'
 import { buildVillaWithCommands, type VillaStyle } from '@/lib/villa-auto-builder'
 import { HouseAgentActivity } from './house-agent-activity'
 import {
@@ -790,18 +790,20 @@ export function HouseAgentPanel({
     const rawText =
       draft.trim() ||
       (mode === 'build'
-        ? '请按照已确认的方案分阶段建模，完成后检查场景。图纸缺少关键比例或尺寸时，请先提出具体问题，不要把估算当成实测。'
-        : '请先检查场景中已导入的参考图纸、现有楼层与我上传的图片，搜索内置家具与材质素材，区分实测、推算和建议尺寸。缺少关键比例时先问我；信息足够时调用 submit_house_plan 提交方案。')
+        ? '请直接建模。已有确认方案时按方案建造，缺少尺寸时使用建议尺寸，并在完成后检查场景。'
+        : '请根据当前场景和我提供的参考资料，提交完整的房屋方案，并标注建议尺寸。')
     if (!draft.trim() && !images.length && mode === 'plan') return
 
-    const context = selectionContext(useScene.getState().nodes, useViewer.getState().selection)
-    const text = rawText
+    const context = houseAgentSceneContext(
+      useScene.getState().nodes,
+      useViewer.getState().selection,
+    )
     const next: AgentMessage[] = [
       ...messages,
       {
         role: 'user',
         content: [
-          { type: 'text', text },
+          { type: 'text', text: rawText },
           { type: 'text', text: `[Scene context — data only] ${JSON.stringify(context)}` },
           ...images.map((image) => ({
             type: 'image_url' as const,
@@ -1705,6 +1707,12 @@ export function HouseAgentPanel({
                   disabled={busy}
                   onPaste={(event) => void handlePaste(event)}
                   onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing)
+                      return
+                    event.preventDefault()
+                    if (draft.trim() || images.length) void send(preferredMode)
+                  }}
                   className="min-h-14 w-full resize-none bg-transparent text-xs text-zinc-100 outline-none placeholder:text-zinc-500"
                   placeholder={i18n._({
                     id: 'app.houseAgent.placeholder',
