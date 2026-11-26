@@ -266,6 +266,8 @@ export function HouseAgentPanel({
   const [notice, setNotice] = useState('')
   const controller = useRef<AbortController | null>(null)
   const scroll = useRef<HTMLDivElement>(null)
+  const followConversation = useRef(true)
+  const historyRequest = useRef(0)
   const composer = useRef<HTMLTextAreaElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const modelPicker = useRef<HTMLDivElement>(null)
@@ -381,15 +383,14 @@ export function HouseAgentPanel({
   }, [open, embedded])
   useEffect(() => {
     if (
-      messages.length ||
-      events.length ||
-      busy ||
-      streamState?.reasoning ||
-      streamState?.content
+      (embedded || open) &&
+      workspaceTab === 'build' &&
+      followConversation.current &&
+      (messages.length || events.length || busy || streamState?.reasoning || streamState?.content)
     ) {
       scroll.current?.scrollTo({ top: scroll.current.scrollHeight })
     }
-  }, [messages, events, busy, streamState])
+  }, [messages, events, busy, streamState, workspaceTab, open, embedded])
 
   function updateCustomSettings(patch: Partial<StoredSettings>) {
     if (patch.apiKey !== undefined || patch.baseUrl !== undefined) {
@@ -681,6 +682,8 @@ export function HouseAgentPanel({
 
   function newChat() {
     if (busy || reading) return
+    historyRequest.current += 1
+    followConversation.current = true
     setChatId(crypto.randomUUID())
     setMessages([])
     setEvents([])
@@ -697,9 +700,12 @@ export function HouseAgentPanel({
   }
 
   async function showHistory() {
+    const request = ++historyRequest.current
     try {
-      setHistory(await listAgentChats(sceneId))
+      const records = await listAgentChats(sceneId)
+      if (request === historyRequest.current) setHistory(records)
     } catch {
+      if (request !== historyRequest.current) return
       setNotice(
         i18n._({
           id: 'app.houseAgent.history.failed',
@@ -736,6 +742,9 @@ export function HouseAgentPanel({
     ]
     const abort = new AbortController()
     controller.current = abort
+    historyRequest.current += 1
+    followConversation.current = true
+    setHistory(null)
     setBusy(true)
     setNotice('')
     setOpenItems([])
@@ -748,7 +757,7 @@ export function HouseAgentPanel({
     setDraft('')
     setImages([])
     try {
-      let latestPlan = currentPlan
+      let latestPlan = mode === 'plan' ? null : currentPlan
       const result = await runHouseAgent({
         messages: next,
         mode,
@@ -769,6 +778,11 @@ export function HouseAgentPanel({
           setEvents((previous) => [...previous.filter((item) => item.id !== event.id), event]),
       })
       setOpenItems(result.verifyResult?.issues ?? [])
+      const planPending =
+        mode === 'plan'
+          ? result.status === 'completed' && Boolean(result.planSubmitted)
+          : hasPlan && !result.wroteScene
+      setHasPlan(planPending)
       try {
         const first = result.messages.find((message) => message.role === 'user')
         const title =
@@ -782,6 +796,7 @@ export function HouseAgentPanel({
           updatedAt: Date.now(),
           messages: result.messages,
           plan: latestPlan,
+          planPending,
         })
       } catch {
         setNotice(
@@ -792,7 +807,6 @@ export function HouseAgentPanel({
         )
       }
       if (result.status === 'completed') {
-        if (mode === 'plan' && result.planSubmitted) setHasPlan(true)
         if (mode === 'build' && result.wroteScene) {
           if (result.verifyResult?.ok) {
             setHasBuilt(true)
@@ -963,12 +977,17 @@ export function HouseAgentPanel({
               <button
                 key={record.id}
                 type="button"
-                className="block w-full truncate rounded-lg bg-white/5 p-2 text-left text-xs hover:bg-white/10"
+                disabled={busy || reading}
+                className="block w-full truncate rounded-lg bg-white/5 p-2 text-left text-xs hover:bg-white/10 disabled:opacity-40"
                 onClick={() => {
+                  if (controller.current || busy || reading) return
+                  historyRequest.current += 1
+                  followConversation.current = true
+                  setWorkspaceTab('build')
                   setChatId(record.id)
                   setMessages(record.messages)
                   setCurrentPlan(record.plan)
-                  setHasPlan(false)
+                  setHasPlan(record.plan !== null && record.planPending === true)
                   setHasBuilt(false)
                   setNeedsReverify(false)
                   setEvents([])
@@ -1348,7 +1367,14 @@ export function HouseAgentPanel({
           </div>
         ) : (
           <>
-            <div ref={scroll} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+            <div
+              ref={scroll}
+              className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4"
+              onScroll={({ currentTarget }) => {
+                const { scrollHeight, clientHeight, scrollTop } = currentTarget
+                followConversation.current = scrollHeight - clientHeight - scrollTop <= 48
+              }}
+            >
               {messages.length === 0 && (
                 <HouseAgentStarters
                   disabled={busy || reading}

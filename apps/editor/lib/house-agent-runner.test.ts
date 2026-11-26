@@ -164,6 +164,24 @@ test('stop between tools keeps completed changes and pairs skipped tools without
   })
 })
 
+test('a stopped build does not report verification from before its last edit', async () => {
+  const controller = new AbortController()
+  const result = await runHouseAgent(
+    options({
+      signal: controller.signal,
+      request: async () => toolReply(['verify_scene', 'add_level']),
+      execute: async (name) => {
+        if (name === 'verify_scene') return { valid: true }
+        controller.abort()
+        return { created: 'level_new' }
+      },
+    }),
+  )
+  expect(result.status).toBe('stopped')
+  expect(result.wroteScene).toBe(true)
+  expect(result.verifyResult).toBeUndefined()
+})
+
 test('stop from progress callback is checked immediately before executing a write', async () => {
   const controller = new AbortController()
   let executed = false

@@ -8,6 +8,7 @@ export const ChatRecordSchema = z.object({
   updatedAt: z.number(),
   messages: z.array(AgentMessageSchema).max(240),
   plan: HousePlanSchema.nullable(),
+  planPending: z.boolean().optional(),
 })
 export type ChatRecord = z.infer<typeof ChatRecordSchema>
 function openHistory(): Promise<IDBDatabase> {

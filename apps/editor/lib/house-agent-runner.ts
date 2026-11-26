@@ -301,6 +301,7 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                   if (toolMeta?.write) {
                     wroteScene = true
                     wroteSinceLastVerify = true
+                    verifyResult = null
                   } else if (name === 'verify_scene') {
                     wroteSinceLastVerify = false
                     const rawIssues = Array.isArray(result.issues)
