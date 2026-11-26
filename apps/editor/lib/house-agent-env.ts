@@ -212,6 +212,12 @@ export function persistHouseAgentEnv(
     }
   }
 
+  const nextContent = serializeEnvUpdates(existingContent, updates)
+  if (nextContent !== existingContent) {
+    mkdirSync(path.dirname(envFilePath), { recursive: true })
+    writeFileSync(envFilePath, nextContent, { encoding: 'utf8', mode: 0o600 })
+  }
+
   for (const [key, val] of Object.entries(updates)) {
     if (val === undefined || val === '') {
       delete env[key]
@@ -219,10 +225,6 @@ export function persistHouseAgentEnv(
       env[key] = val
     }
   }
-
-  mkdirSync(path.dirname(envFilePath), { recursive: true })
-  const nextContent = serializeEnvUpdates(existingContent, updates)
-  writeFileSync(envFilePath, nextContent, { encoding: 'utf8', mode: 0o600 })
 
   const agentCfg = agentConfiguration(env)
   const imageCfg = imageConfiguration(env)

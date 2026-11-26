@@ -107,29 +107,29 @@ type StoredSettings = {
   baseUrl: string
   model: string
   apiKey: string
-  reasoningEffort: AgentReasoningEffort
+  reasoningEffort?: AgentReasoningEffort
   buildProfile?: AgentBuildProfile
   modelTab?: HouseAgentModelTab
 }
 
 function loadStoredSettings(): StoredSettings {
   if (typeof window === 'undefined') {
-    return { baseUrl: '', model: '', apiKey: '', reasoningEffort: 'auto' }
+    return { baseUrl: '', model: '', apiKey: '' }
   }
   try {
     const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
-    if (!raw) return { baseUrl: '', model: '', apiKey: '', reasoningEffort: 'auto' }
+    if (!raw) return { baseUrl: '', model: '', apiKey: '' }
     const parsed = JSON.parse(raw) as Partial<StoredSettings>
     return {
       baseUrl: typeof parsed.baseUrl === 'string' ? parsed.baseUrl : '',
       model: typeof parsed.model === 'string' ? parsed.model : '',
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
-      reasoningEffort: AgentReasoningEffortSchema.safeParse(parsed.reasoningEffort).data ?? 'auto',
+      reasoningEffort: AgentReasoningEffortSchema.safeParse(parsed.reasoningEffort).data,
       buildProfile: AgentBuildProfileSchema.safeParse(parsed.buildProfile).data,
       modelTab: parsed.modelTab === 'models' ? 'models' : 'architect',
     }
   } catch {
-    return { baseUrl: '', model: '', apiKey: '', reasoningEffort: 'auto' }
+    return { baseUrl: '', model: '', apiKey: '' }
   }
 }
 
@@ -137,25 +137,25 @@ type StoredImageSettings = {
   baseUrl: string
   model: string
   apiKey: string
-  mode: ImageGenMode
+  mode?: ImageGenMode
 }
 
 function loadStoredImageSettings(): StoredImageSettings {
   if (typeof window === 'undefined') {
-    return { baseUrl: '', model: '', apiKey: '', mode: 'auto' }
+    return { baseUrl: '', model: '', apiKey: '' }
   }
   try {
     const raw = window.localStorage.getItem(IMAGE_SETTINGS_STORAGE_KEY)
-    if (!raw) return { baseUrl: '', model: '', apiKey: '', mode: 'auto' }
+    if (!raw) return { baseUrl: '', model: '', apiKey: '' }
     const parsed = JSON.parse(raw) as Partial<StoredImageSettings>
     return {
       baseUrl: typeof parsed.baseUrl === 'string' ? parsed.baseUrl : '',
       model: typeof parsed.model === 'string' ? parsed.model : '',
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
-      mode: parsed.mode === 'images' || parsed.mode === 'chat' ? parsed.mode : 'auto',
+      mode: parsed.mode === 'images' || parsed.mode === 'chat' ? parsed.mode : undefined,
     }
   } catch {
-    return { baseUrl: '', model: '', apiKey: '', mode: 'auto' }
+    return { baseUrl: '', model: '', apiKey: '' }
   }
 }
 
@@ -276,6 +276,9 @@ export function HouseAgentPanel({
   const [agentModels, setAgentModels] = useState(EMPTY_MODEL_SCAN)
   const [imageModels, setImageModels] = useState(EMPTY_MODEL_SCAN)
   const [savingEnv, setSavingEnv] = useState(false)
+  const envSaveInFlight = useRef(false)
+  const [envRevision, setEnvRevision] = useState({ agent: 0, image: 0 })
+  const attemptedEnvRevision = useRef({ agent: 0, image: 0 })
   const [envSaveState, setEnvSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [envSaveError, setEnvSaveError] = useState('')
   const modelTab = customSettings.modelTab ?? 'architect'
@@ -294,15 +297,23 @@ export function HouseAgentPanel({
   )
   const effectiveModelLabel = customSettings.model.trim() || config?.model || ''
   const chosenModel = chatModels.find((model) => model.id === effectiveModelLabel)
+  const requestedEffort = customSettings.reasoningEffort ?? config?.reasoningEffort ?? 'auto'
   const reasoningEffort =
-    chosenModel?.reasoningEfforts &&
-    !modelEfforts(chosenModel).includes(customSettings.reasoningEffort)
+    chosenModel?.reasoningEfforts && !modelEfforts(chosenModel).includes(requestedEffort)
       ? 'auto'
-      : customSettings.reasoningEffort
+      : requestedEffort
+
+  const imageBaseUrl =
+    customImageSettings.baseUrl.trim() || imageConfigStatus?.baseUrl || 'https://api.openai.com/v1'
+  const canUseImageServerKey = Boolean(
+    (imageConfigStatus?.maskedApiKey || imageConfigStatus?.configured) &&
+      imageBaseUrl.replace(/\/+$/, '') === (imageConfigStatus?.baseUrl ?? '').replace(/\/+$/, ''),
+  )
+  const canScanImageModels = Boolean(customImageSettings.apiKey.trim() || canUseImageServerKey)
 
   const effectiveImageConfigured = Boolean(
-    imageConfigStatus?.configured ||
-      (customImageSettings.apiKey.trim() && customImageSettings.model.trim()),
+    (customImageSettings.apiKey.trim() || canUseImageServerKey) &&
+      (customImageSettings.model.trim() || imageConfigStatus?.model),
   )
   const effectiveImageModelLabel =
     customImageSettings.model.trim() || imageConfigStatus?.model || ''
@@ -319,7 +330,7 @@ export function HouseAgentPanel({
     customImageSettings.baseUrl.trim() ||
     customImageSettings.model.trim() ||
     customImageSettings.apiKey.trim() ||
-    customImageSettings.mode !== 'auto'
+    customImageSettings.mode !== undefined
       ? {
           ...(customImageSettings.baseUrl.trim()
             ? { baseUrl: customImageSettings.baseUrl.trim() }
@@ -328,7 +339,7 @@ export function HouseAgentPanel({
           ...(customImageSettings.apiKey.trim()
             ? { apiKey: customImageSettings.apiKey.trim() }
             : {}),
-          mode: customImageSettings.mode,
+          ...(customImageSettings.mode !== undefined ? { mode: customImageSettings.mode } : {}),
         }
       : undefined
 
@@ -392,20 +403,37 @@ export function HouseAgentPanel({
     }
   }, [messages, events, busy, streamState, workspaceTab, open, embedded])
 
+  function markEnvChanged(target: ModelScanTarget) {
+    setEnvRevision((previous) => ({ ...previous, [target]: previous[target] + 1 }))
+    setEnvSaveState('idle')
+    setEnvSaveError('')
+  }
+
   function updateCustomSettings(patch: Partial<StoredSettings>) {
     if (patch.apiKey !== undefined || patch.baseUrl !== undefined) {
       scanRequests.current.agent?.abort()
       setAgentModels(EMPTY_MODEL_SCAN)
     }
-    setCustomSettings((prev) => {
-      const next = { ...prev, ...patch }
+    if (
+      patch.baseUrl !== undefined ||
+      patch.model !== undefined ||
+      patch.apiKey !== undefined ||
+      patch.reasoningEffort !== undefined
+    ) {
+      markEnvChanged('agent')
+    }
+    setCustomSettings((previous) => ({ ...previous, ...patch }))
+    if (patch.modelTab !== undefined || patch.buildProfile !== undefined) {
       try {
-        window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next))
+        const { buildProfile, modelTab } = { ...customSettings, ...patch }
+        window.localStorage.setItem(
+          SETTINGS_STORAGE_KEY,
+          JSON.stringify({ buildProfile, modelTab }),
+        )
       } catch {
-        // Ignore storage quota issues.
+        // Browser preferences are optional.
       }
-      return next
-    })
+    }
   }
 
   function updateCustomImageSettings(patch: Partial<StoredImageSettings>) {
@@ -413,20 +441,13 @@ export function HouseAgentPanel({
       scanRequests.current.image?.abort()
       setImageModels(EMPTY_MODEL_SCAN)
     }
-    setCustomImageSettings((prev) => {
-      const next = { ...prev, ...patch }
-      try {
-        window.localStorage.setItem(IMAGE_SETTINGS_STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // Ignore storage quota issues.
-      }
-      return next
-    })
+    setCustomImageSettings((previous) => ({ ...previous, ...patch }))
+    markEnvChanged('image')
   }
 
   async function detectModels(target: ModelScanTarget, baseUrl: string, apiKey: string) {
     const trimmedKey = apiKey.trim()
-    if (!trimmedKey && (target === 'image' || !canScanAgentModels)) return
+    if (!trimmedKey && (target === 'agent' ? !canScanAgentModels : !canScanImageModels)) return
     scanRequests.current[target]?.abort()
     const request = new AbortController()
     scanRequests.current[target] = request
@@ -437,7 +458,7 @@ export function HouseAgentPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
-          trimmedKey ? { baseUrl, apiKey: trimmedKey } : { useServerConfig: true },
+          trimmedKey ? { baseUrl, apiKey: trimmedKey } : { useServerConfig: true, target },
         ),
         signal: request.signal,
       })
@@ -452,7 +473,7 @@ export function HouseAgentPanel({
       if (request.signal.aborted) return
       const list = body.models
       setState({ loading: false, models: list, count: body.count ?? list.length, error: '' })
-      if (target === 'image' && !customImageSettings.model.trim()) {
+      if (target === 'image' && !effectiveImageModelLabel) {
         const preferred = list.find((model) => model.kind === 'image')
         if (preferred) updateCustomImageSettings({ model: preferred.id })
       }
@@ -483,68 +504,117 @@ export function HouseAgentPanel({
     void detectModels('agent', agentBaseUrl, customSettings.apiKey)
   }
 
-  async function saveSettingsToEnv(silent = false) {
-    if (savingEnv) return
-    if (!silent) {
-      setSavingEnv(true)
-      setEnvSaveError('')
-    }
+  async function saveSettingsToEnv(manual = false) {
+    if (envSaveInFlight.current) return
+
+    const targets = (['agent', 'image'] as const).filter((target) =>
+      manual
+        ? envRevision[target] > 0 ||
+          (target === 'agent' ? customSettings.apiKey.trim() : customImageSettings.apiKey.trim())
+        : envRevision[target] !== attemptedEnvRevision.current[target],
+    )
+    if (!targets.length) return
+
+    envSaveInFlight.current = true
+    setSavingEnv(true)
+    setEnvSaveError('')
+    const errors: string[] = []
+    let saved = false
     try {
-      const response = await fetch('/api/house-agent/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agent: {
-            ...(customSettings.baseUrl.trim() ? { baseUrl: customSettings.baseUrl.trim() } : {}),
-            ...(customSettings.model.trim() ? { model: customSettings.model.trim() } : {}),
-            ...(customSettings.apiKey.trim() ? { apiKey: customSettings.apiKey.trim() } : {}),
-            reasoningEffort: customSettings.reasoningEffort,
-          },
-          image: {
-            ...(customImageSettings.baseUrl.trim()
-              ? { baseUrl: customImageSettings.baseUrl.trim() }
-              : {}),
-            ...(customImageSettings.model.trim()
-              ? { model: customImageSettings.model.trim() }
-              : {}),
-            ...(customImageSettings.apiKey.trim()
-              ? { apiKey: customImageSettings.apiKey.trim() }
-              : {}),
-            mode: customImageSettings.mode,
-          },
-        }),
-      })
-      const body = (await response.json().catch(() => null)) as {
-        saved?: boolean
-        agent?: AgentConfiguration
-        image?: ImageConfiguration
-        error?: string
-      } | null
-      if (!response.ok || !body?.saved) {
-        throw new Error(body?.error || `HTTP ${response.status}`)
+      for (const target of targets) {
+        attemptedEnvRevision.current[target] = envRevision[target]
+        const settings = target === 'agent' ? customSettings : customImageSettings
+        const baseUrl = settings.baseUrl.trim()
+        const model = settings.model.trim()
+        const apiKey = settings.apiKey.trim()
+        const fields = {
+          ...(baseUrl ? { baseUrl } : {}),
+          ...(model ? { model } : {}),
+          ...(apiKey ? { apiKey } : {}),
+          ...(target === 'agent' && customSettings.reasoningEffort !== undefined
+            ? { reasoningEffort: customSettings.reasoningEffort }
+            : {}),
+          ...(target === 'image' && customImageSettings.mode !== undefined
+            ? { mode: customImageSettings.mode }
+            : {}),
+        }
+        if (Object.keys(fields).length === 0) continue
+
+        try {
+          const response = await fetch('/api/house-agent/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [target]: fields }),
+          })
+          const body = (await response.json().catch(() => null)) as {
+            saved?: boolean
+            agent?: AgentConfiguration
+            image?: ImageConfiguration
+            error?: string
+          } | null
+          if (!response.ok || !body?.saved) {
+            throw new Error(body?.error || `HTTP ${response.status}`)
+          }
+          if (body.agent) setConfig(body.agent)
+          if (body.image) setImageConfigStatus(body.image)
+          if (target === 'agent') {
+            setCustomSettings((current) => ({
+              ...current,
+              baseUrl: current.baseUrl.trim() === baseUrl ? '' : current.baseUrl,
+              model: current.model.trim() === model ? '' : current.model,
+              apiKey: current.apiKey.trim() === apiKey ? '' : current.apiKey,
+              reasoningEffort:
+                current.reasoningEffort === customSettings.reasoningEffort
+                  ? undefined
+                  : current.reasoningEffort,
+            }))
+          } else {
+            setCustomImageSettings((current) => ({
+              ...current,
+              baseUrl: current.baseUrl.trim() === baseUrl ? '' : current.baseUrl,
+              model: current.model.trim() === model ? '' : current.model,
+              apiKey: current.apiKey.trim() === apiKey ? '' : current.apiKey,
+              mode: current.mode === customImageSettings.mode ? undefined : current.mode,
+            }))
+          }
+          try {
+            if (target === 'agent') {
+              const { buildProfile, modelTab } = loadStoredSettings()
+              window.localStorage.setItem(
+                SETTINGS_STORAGE_KEY,
+                JSON.stringify({ buildProfile, modelTab }),
+              )
+            } else {
+              window.localStorage.removeItem(IMAGE_SETTINGS_STORAGE_KEY)
+            }
+          } catch {
+            // The environment save does not depend on browser storage.
+          }
+          saved = true
+        } catch (error) {
+          errors.push(error instanceof Error ? error.message : String(error))
+        }
       }
-      if (body.agent) setConfig(body.agent)
-      if (body.image) setImageConfigStatus(body.image)
-      setEnvSaveState('saved')
-      setEnvSaveError('')
-    } catch (error) {
-      if (!silent) {
-        setEnvSaveState('error')
-        setEnvSaveError(error instanceof Error ? error.message : String(error))
-      }
+      setEnvSaveError(errors.join(' · '))
+      setEnvSaveState(errors.length ? 'error' : saved ? 'saved' : 'idle')
     } finally {
-      if (!silent) setSavingEnv(false)
+      envSaveInFlight.current = false
+      setSavingEnv(false)
     }
   }
 
-  const autoSaveEnv = useEffectEvent(() => saveSettingsToEnv(true))
+  const autoSaveEnv = useEffectEvent(() => saveSettingsToEnv())
   useEffect(() => {
-    const hasNewKey =
-      customSettings.apiKey.trim().length >= 10 || customImageSettings.apiKey.trim().length >= 10
-    if (!hasNewKey) return
+    if (
+      savingEnv ||
+      (envRevision.agent === attemptedEnvRevision.current.agent &&
+        envRevision.image === attemptedEnvRevision.current.image)
+    ) {
+      return
+    }
     const timer = setTimeout(() => void autoSaveEnv(), 900)
     return () => clearTimeout(timer)
-  }, [customSettings.apiKey, customImageSettings.apiKey])
+  }, [envRevision, savingEnv])
 
   function selectChatModel(model: DetectedModelItem) {
     updateCustomSettings({
@@ -1198,7 +1268,7 @@ export function HouseAgentPanel({
                     })}
                   </span>
                   <select
-                    value={customImageSettings.mode}
+                    value={customImageSettings.mode ?? imageConfigStatus?.mode ?? 'auto'}
                     onChange={(e) =>
                       updateCustomImageSettings({ mode: e.target.value as ImageGenMode })
                     }
@@ -1242,15 +1312,9 @@ export function HouseAgentPanel({
                   />
                   <button
                     type="button"
-                    disabled={!customImageSettings.apiKey.trim() || imageModels.loading}
+                    disabled={!canScanImageModels || imageModels.loading}
                     onClick={() =>
-                      void detectModels(
-                        'image',
-                        customImageSettings.baseUrl.trim() ||
-                          imageConfigStatus?.baseUrl ||
-                          'https://api.openai.com/v1',
-                        customImageSettings.apiKey,
-                      )
+                      void detectModels('image', imageBaseUrl, customImageSettings.apiKey)
                     }
                     className="shrink-0 rounded-lg border border-violet-500/40 bg-violet-500/15 px-2.5 py-1.5 text-[11px] font-medium text-violet-200 hover:bg-violet-500/25 disabled:opacity-40"
                   >
@@ -1271,7 +1335,11 @@ export function HouseAgentPanel({
                   </p>
                   {imageModels.models.length > 0 && (
                     <select
-                      value={customImageSettings.model}
+                      value={
+                        imageModels.models.some(({ id }) => id === effectiveImageModelLabel)
+                          ? effectiveImageModelLabel
+                          : ''
+                      }
                       onChange={(e) => updateCustomImageSettings({ model: e.target.value })}
                       className="w-full rounded-lg border border-violet-500/30 bg-black/50 px-2 py-1.5 font-mono text-[11px] text-violet-100 outline-none focus:border-violet-400"
                     >
@@ -1304,7 +1372,7 @@ export function HouseAgentPanel({
                 <button
                   type="button"
                   disabled={savingEnv}
-                  onClick={() => void saveSettingsToEnv(false)}
+                  onClick={() => void saveSettingsToEnv(true)}
                   className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-[11px] font-medium text-emerald-200 hover:bg-emerald-500/25 disabled:opacity-40"
                 >
                   {savingEnv
@@ -1314,9 +1382,7 @@ export function HouseAgentPanel({
                         message: 'Save keys & models to .env.local',
                       })}
                 </button>
-                {(envSaveState === 'saved' ||
-                  config?.maskedApiKey ||
-                  imageConfigStatus?.maskedApiKey) && (
+                {envSaveState === 'saved' && !savingEnv && (
                   <span className="text-[10px] text-emerald-300">
                     {i18n._({
                       id: 'app.houseAgent.settings.savedEnvHint',

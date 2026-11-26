@@ -67,6 +67,36 @@ describe('house-agent-env persistence', () => {
       expect(freshEnv.PASCAL_AGENT_API_KEY).toBe('sk-agent-secret-9999')
       expect(freshEnv.PASCAL_IMAGE_MODEL).toBe('gpt-image-1')
       expect(freshEnv.PASCAL_IMAGE_API_KEY).toBe('sk-image-secret-8888')
+
+      persistHouseAgentEnv(
+        { image: { model: 'new-image-model', mode: 'chat' } },
+        { env: freshEnv, envFilePath: envFile },
+      )
+      const restored: NodeJS.ProcessEnv = {}
+      hydrateProcessEnvFromFile(restored, envFile)
+      expect(restored.PASCAL_IMAGE_MODEL).toBe('new-image-model')
+      expect(restored.PASCAL_IMAGE_API_MODE).toBe('chat')
+      expect(restored.PASCAL_IMAGE_API_KEY).toBe('sk-image-secret-8888')
+      expect(restored.PASCAL_AGENT_MODEL).toBe('o3')
+      expect(restored.PASCAL_AGENT_REASONING_EFFORT).toBe('high')
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('a failed disk write does not change active model settings', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'pascal-env-write-'))
+    const blocked = path.join(dir, 'file')
+    writeFileSync(blocked, '')
+    const env = { PASCAL_AGENT_MODEL: 'original' }
+    try {
+      expect(() =>
+        persistHouseAgentEnv(
+          { agent: { model: 'replacement' } },
+          { env, envFilePath: path.join(blocked, '.env.local') },
+        ),
+      ).toThrow()
+      expect(env.PASCAL_AGENT_MODEL).toBe('original')
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

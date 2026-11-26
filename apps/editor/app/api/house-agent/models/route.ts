@@ -1,12 +1,18 @@
 import { z } from 'zod'
 import { hydrateProcessEnvFromFile } from '@/lib/house-agent-env'
+import { imageConfiguration } from '@/lib/house-agent-image'
 import { AgentReasoningEffortSchema, type DetectedModelItem } from '@/lib/house-agent-protocol'
 import { agentConfiguration, readLimitedJson } from '@/lib/house-agent-server'
 
 export const runtime = 'nodejs'
 
 const ModelsRequestSchema = z.union([
-  z.object({ useServerConfig: z.literal(true) }).strict(),
+  z
+    .object({
+      useServerConfig: z.literal(true),
+      target: z.enum(['agent', 'image']).optional(),
+    })
+    .strict(),
   z
     .object({
       baseUrl: z.string().trim().min(1).max(500).optional(),
@@ -72,11 +78,17 @@ export async function POST(request: Request) {
     return Response.json({ error: '请填写有效的 API Key 和 Base URL。' }, { status: 400 })
   }
 
-  const server = agentConfiguration()
+  const useImageServer = 'useServerConfig' in parsed && parsed.target === 'image'
+  const server = useImageServer ? imageConfiguration() : agentConfiguration()
   const baseUrl = ('useServerConfig' in parsed ? server.baseUrl : parsed.baseUrl || server.baseUrl)
     .trim()
     .replace(/\/+$/, '')
-  const apiKey = 'useServerConfig' in parsed ? process.env.PASCAL_AGENT_API_KEY : parsed.apiKey
+  const apiKey =
+    'useServerConfig' in parsed
+      ? useImageServer
+        ? process.env.PASCAL_IMAGE_API_KEY
+        : process.env.PASCAL_AGENT_API_KEY
+      : parsed.apiKey
   if (!apiKey) return Response.json({ error: '请先配置模型服务的 API Key。' }, { status: 400 })
 
   let modelsUrl: URL
