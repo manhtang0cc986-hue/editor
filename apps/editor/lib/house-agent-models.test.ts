@@ -95,7 +95,7 @@ test('saved chat credentials discover models that render with their brand logos'
   const upstream = spyOn(globalThis, 'fetch').mockResolvedValue(
     Response.json({
       data: [
-        { id: 'deepseek-chat', owned_by: 'deepseek' },
+        { id: 'gpt-4o-mini', owned_by: 'openai' },
         { id: 'private-alias', owned_by: 'private-gateway' },
         { id: 'gpt-image-1' },
       ],
@@ -121,7 +121,7 @@ test('saved chat credentials discover models that render with their brand logos'
         tab: 'models',
         profile: 'structure',
         effort: 'auto',
-        currentModel: 'deepseek-chat',
+        currentModel: 'gpt-4o-mini',
         detectedModels: models.filter(({ kind }) => kind === 'chat'),
         scanned: true,
         loading: false,
@@ -136,8 +136,8 @@ test('saved chat credentials discover models that render with their brand logos'
         onClose: noop,
       }),
     )
-    expect(html).toContain('/model-logos/deepseek-color.svg')
-    expect(html).toContain('deepseek-chat')
+    expect(html).toContain('/model-logos/openai.svg')
+    expect(html).toContain('gpt-4o-mini')
     expect(html).toContain('private-alias')
     expect(html).not.toContain('gpt-image-1')
     expect(html).not.toContain('synthetic-chat-key')
