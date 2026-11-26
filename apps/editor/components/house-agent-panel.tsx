@@ -1124,16 +1124,27 @@ export function HouseAgentPanel({
                   <span className="text-[11px] text-zinc-400">
                     {i18n._({ id: 'app.houseAgent.settings.model', message: 'Model' })}
                   </span>
-                  <input
-                    type="text"
-                    value={customSettings.model}
-                    onChange={(e) =>
-                      updateCustomSettings({ model: e.target.value, reasoningEffort: 'auto' })
-                    }
-                    // i18n-ignore: technical model ID examples
-                    placeholder={config?.model || 'gpt-4o / qwen-vl / deepseek'}
-                    className="w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 font-mono text-[11px] outline-none focus:border-sky-500"
-                  />
+                  <span className="relative block">
+                    <input
+                      type="text"
+                      value={customSettings.model}
+                      onChange={(e) =>
+                        updateCustomSettings({ model: e.target.value, reasoningEffort: 'auto' })
+                      }
+                      // i18n-ignore: technical model ID examples
+                      placeholder={config?.model || 'gpt-4o / qwen-vl / deepseek'}
+                      className="w-full rounded-lg border border-white/10 bg-black/40 py-1.5 pr-8 pl-2.5 font-mono text-[11px] outline-none focus:border-sky-500"
+                    />
+                    {effectiveModelLabel && (
+                      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                        <HouseAgentModelLogo
+                          modelId={effectiveModelLabel}
+                          owner={chosenModel?.ownedBy}
+                          compact
+                        />
+                      </span>
+                    )}
+                  </span>
                 </label>
                 <label className="space-y-1">
                   <span className="text-[11px] text-zinc-400">
@@ -1265,14 +1276,30 @@ export function HouseAgentPanel({
                       message: 'Image Model',
                     })}
                   </span>
-                  <input
-                    type="text"
-                    value={customImageSettings.model}
-                    onChange={(e) => updateCustomImageSettings({ model: e.target.value })}
-                    // i18n-ignore: technical image model ID examples
-                    placeholder={imageConfigStatus?.model || 'gpt-image-1 / gemini-2.5-flash-image'}
-                    className="w-full rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 font-mono text-[11px] outline-none focus:border-violet-400"
-                  />
+                  <span className="relative block">
+                    <input
+                      type="text"
+                      value={customImageSettings.model}
+                      onChange={(e) => updateCustomImageSettings({ model: e.target.value })}
+                      // i18n-ignore: technical image model ID examples
+                      placeholder={
+                        imageConfigStatus?.model || 'gpt-image-1 / gemini-2.5-flash-image'
+                      }
+                      className="w-full rounded-lg border border-white/10 bg-black/40 py-1.5 pr-8 pl-2.5 font-mono text-[11px] outline-none focus:border-violet-400"
+                    />
+                    {effectiveImageModelLabel && (
+                      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                        <HouseAgentModelLogo
+                          modelId={effectiveImageModelLabel}
+                          owner={
+                            imageModels.models.find(({ id }) => id === effectiveImageModelLabel)
+                              ?.ownedBy
+                          }
+                          compact
+                        />
+                      </span>
+                    )}
+                  </span>
                 </label>
                 <label className="space-y-1">
                   <span className="text-[11px] text-zinc-400">
