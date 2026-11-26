@@ -1,5 +1,9 @@
 import { expect, spyOn, test } from 'bun:test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { POST } from '../app/api/house-agent/models/route'
+import { HouseAgentArchitectPopover } from '../components/house-agent-architect-popover'
+import type { DetectedModelItem } from './house-agent-protocol'
 
 test('model detection preserves custom chat aliases, distinguishes non-chat models, and reports advertised reasoning levels', async () => {
   const upstream = spyOn(globalThis, 'fetch').mockImplementation(async () =>
@@ -80,5 +84,68 @@ test('useServerConfig supports target image with PASCAL_IMAGE_API_KEY and PASCAL
     else process.env.PASCAL_IMAGE_BASE_URL = prevUrl
     if (prevKey === undefined) delete process.env.PASCAL_IMAGE_API_KEY
     else process.env.PASCAL_IMAGE_API_KEY = prevKey
+  }
+})
+
+test('saved chat credentials discover models that render with their brand logos', async () => {
+  const previousUrl = process.env.PASCAL_AGENT_BASE_URL
+  const previousKey = process.env.PASCAL_AGENT_API_KEY
+  process.env.PASCAL_AGENT_BASE_URL = 'https://models.example/v1'
+  process.env.PASCAL_AGENT_API_KEY = 'synthetic-chat-key'
+  const upstream = spyOn(globalThis, 'fetch').mockResolvedValue(
+    Response.json({
+      data: [
+        { id: 'deepseek-chat', owned_by: 'deepseek' },
+        { id: 'private-alias', owned_by: 'private-gateway' },
+        { id: 'gpt-image-1' },
+      ],
+    }),
+  )
+  try {
+    const response = await POST(
+      new Request('http://localhost/api/house-agent/models', {
+        method: 'POST',
+        headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useServerConfig: true, target: 'agent' }),
+      }),
+    )
+    expect(response.status).toBe(200)
+    expect(String(upstream.mock.calls[0]?.[0])).toBe('https://models.example/v1/models')
+    expect(new Headers(upstream.mock.calls[0]?.[1]?.headers).get('authorization')).toBe(
+      'Bearer synthetic-chat-key',
+    )
+    const { models } = (await response.json()) as { models: DetectedModelItem[] }
+    const noop = () => undefined
+    const html = renderToStaticMarkup(
+      createElement(HouseAgentArchitectPopover, {
+        tab: 'models',
+        profile: 'structure',
+        effort: 'auto',
+        currentModel: 'deepseek-chat',
+        detectedModels: models.filter(({ kind }) => kind === 'chat'),
+        scanned: true,
+        loading: false,
+        scanError: '',
+        canScan: true,
+        onTabChange: noop,
+        onSelectProfile: noop,
+        onSelectEffort: noop,
+        onSelectModel: noop,
+        onScan: noop,
+        onOpenSettings: noop,
+        onClose: noop,
+      }),
+    )
+    expect(html).toContain('/model-logos/deepseek-color.svg')
+    expect(html).toContain('deepseek-chat')
+    expect(html).toContain('private-alias')
+    expect(html).not.toContain('gpt-image-1')
+    expect(html).not.toContain('synthetic-chat-key')
+  } finally {
+    upstream.mockRestore()
+    if (previousUrl === undefined) delete process.env.PASCAL_AGENT_BASE_URL
+    else process.env.PASCAL_AGENT_BASE_URL = previousUrl
+    if (previousKey === undefined) delete process.env.PASCAL_AGENT_API_KEY
+    else process.env.PASCAL_AGENT_API_KEY = previousKey
   }
 })

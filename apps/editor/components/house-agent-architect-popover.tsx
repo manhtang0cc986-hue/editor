@@ -1,7 +1,8 @@
 'use client'
 
 import { usePascalI18n } from '@pascal-app/core'
-import { Check, DraftingCompass, Layers3, RefreshCw, Settings2, X } from 'lucide-react'
+import { Bot, Check, DraftingCompass, Layers3, RefreshCw, Settings2, X } from 'lucide-react'
+import { houseAgentModelBrand } from '@/lib/house-agent-model-brand'
 import type {
   AgentBuildProfile,
   AgentReasoningEffort,
@@ -30,6 +31,40 @@ type HouseAgentArchitectPopoverProps = {
 }
 
 const UNKNOWN_MODEL_EFFORTS = ['auto', 'low', 'medium', 'high'] as const
+
+export function HouseAgentModelLogo({
+  modelId,
+  owner,
+  compact = false,
+}: {
+  modelId: string
+  owner?: string
+  compact?: boolean
+}) {
+  const brand = houseAgentModelBrand(modelId, owner)
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        compact
+          ? 'grid size-4 shrink-0 place-items-center'
+          : 'grid size-7 shrink-0 place-items-center rounded-md bg-white/5'
+      }
+    >
+      {brand ? (
+        <img
+          alt=""
+          width={compact ? 14 : 16}
+          height={compact ? 14 : 16}
+          src={`/model-logos/${brand.icon}.svg`}
+          className={brand.invert ? 'invert' : undefined}
+        />
+      ) : (
+        <Bot size={compact ? 14 : 16} className="text-zinc-400" />
+      )}
+    </span>
+  )
+}
 
 export function modelEfforts(
   model?: DetectedModelItem,
@@ -164,7 +199,16 @@ export function HouseAgentArchitectPopover({
               <h4 className="font-semibold">
                 {i18n._({ id: 'app.houseAgent.scope.title', message: 'Build scope' })}
               </h4>
-              {currentModel && <p className="mt-1 break-all text-zinc-400">{currentModel}</p>}
+              {currentModel && (
+                <p className="mt-1 flex items-center gap-1.5 break-all text-zinc-400">
+                  <HouseAgentModelLogo
+                    modelId={currentModel}
+                    owner={selectedModel?.ownedBy}
+                    compact
+                  />
+                  {currentModel}
+                </p>
+              )}
             </div>
           </div>
           <div className="divide-y divide-white/10">
@@ -227,6 +271,7 @@ export function HouseAgentArchitectPopover({
                     onClick={() => onSelectModel(model)}
                     className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left hover:bg-white/5 aria-pressed:bg-sky-300/15"
                   >
+                    <HouseAgentModelLogo modelId={model.id} owner={model.ownedBy} />
                     <span className="min-w-0 flex-1 break-all">
                       <span className="block">{model.id}</span>
                       {model.ownedBy && (
@@ -255,6 +300,12 @@ export function HouseAgentArchitectPopover({
           </div>
           {currentModel && (
             <div className="space-y-2 border-white/10 border-t bg-white/[0.025] p-3">
+              {selectedModel === undefined && (
+                <p className="flex items-center gap-2 break-all text-zinc-300">
+                  <HouseAgentModelLogo modelId={currentModel} compact />
+                  {currentModel}
+                </p>
+              )}
               <label className="block font-semibold">
                 {i18n._({
                   id: 'app.houseAgent.settings.reasoningEffort',

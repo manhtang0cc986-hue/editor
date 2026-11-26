@@ -50,6 +50,7 @@ import { buildVillaWithCommands, type VillaStyle } from '@/lib/villa-auto-builde
 import { HouseAgentActivity } from './house-agent-activity'
 import {
   HouseAgentArchitectPopover,
+  HouseAgentModelLogo,
   type HouseAgentModelTab,
   modelEfforts,
   useHouseAgentModelLabels,
@@ -483,6 +484,8 @@ export function HouseAgentPanel({
         ...EMPTY_MODEL_SCAN,
         error: error instanceof Error ? error.message : 'Model detection failed.',
       })
+    } finally {
+      if (scanRequests.current[target] === request) delete scanRequests.current[target]
     }
   }
 
@@ -503,6 +506,15 @@ export function HouseAgentPanel({
   function scanAgentModels() {
     void detectModels('agent', agentBaseUrl, customSettings.apiKey)
   }
+
+  const autoDetectAgentModels = useEffectEvent((baseUrl: string) => {
+    if (!scanRequests.current.agent && agentModels.count === null)
+      void detectModels('agent', baseUrl, '')
+  })
+  useEffect(() => {
+    if ((!open && !embedded) || !canScanAgentModels || customSettings.apiKey.trim()) return
+    autoDetectAgentModels(agentBaseUrl)
+  }, [open, embedded, canScanAgentModels, agentBaseUrl, customSettings.apiKey])
 
   async function saveSettingsToEnv(manual = false) {
     if (envSaveInFlight.current) return
@@ -1837,6 +1849,13 @@ export function HouseAgentPanel({
                       }}
                       className="inline-flex min-w-0 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-200 hover:bg-white/10 disabled:opacity-50"
                     >
+                      {modelTab === 'models' && effectiveModelLabel && (
+                        <HouseAgentModelLogo
+                          modelId={effectiveModelLabel}
+                          owner={chosenModel?.ownedBy}
+                          compact
+                        />
+                      )}
                       <span className="max-w-24 truncate font-medium">
                         {modelTab === 'models' && effectiveModelLabel
                           ? effectiveModelLabel
