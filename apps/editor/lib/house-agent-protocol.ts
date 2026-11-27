@@ -21,8 +21,8 @@ export const AgentReasoningEffortSchema = z.enum([
 ])
 export type AgentReasoningEffort = z.infer<typeof AgentReasoningEffortSchema>
 
-export const AgentBuildProfileSchema = z.enum(['layout', 'structure', 'interiors', 'review'])
-export type AgentBuildProfile = z.infer<typeof AgentBuildProfileSchema>
+export const HouseBuildStageSchema = z.enum(['layout', 'structure', 'interiors', 'review'])
+export type HouseBuildStage = z.infer<typeof HouseBuildStageSchema>
 
 export type DetectedModelItem = {
   id: string
@@ -79,7 +79,6 @@ export const AgentClientConfigSchema = z
     model: z.string().min(1).max(200).optional(),
     apiKey: z.string().min(1).max(500).optional(),
     reasoningEffort: AgentReasoningEffortSchema.optional(),
-    buildProfile: AgentBuildProfileSchema.optional(),
   })
   .optional()
 
@@ -179,6 +178,7 @@ export const HouseAutomationSchema = z.object({
   phases: z
     .array(
       z.object({
+        stage: HouseBuildStageSchema.optional(),
         title: z.string().min(1).max(120),
         level: z.string().min(1).max(80),
         tasks: z.array(z.string().min(1).max(240)).min(1).max(12),

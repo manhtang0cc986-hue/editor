@@ -4,16 +4,15 @@ import { usePascalI18n } from '@pascal-app/core'
 import { Bot, Check, DraftingCompass, Layers3, RefreshCw, Settings2, X } from 'lucide-react'
 import { houseAgentModelBrand } from '@/lib/house-agent-model-brand'
 import type {
-  AgentBuildProfile,
   AgentReasoningEffort,
   DetectedModelItem,
+  HouseBuildStage,
 } from '@/lib/house-agent-protocol'
 
 export type HouseAgentModelTab = 'architect' | 'models'
 
 type HouseAgentArchitectPopoverProps = {
   tab: HouseAgentModelTab
-  profile: AgentBuildProfile
   effort: AgentReasoningEffort
   currentModel: string
   detectedModels: DetectedModelItem[]
@@ -22,7 +21,6 @@ type HouseAgentArchitectPopoverProps = {
   scanError: string
   canScan: boolean
   onTabChange: (tab: HouseAgentModelTab) => void
-  onSelectProfile: (profile: AgentBuildProfile) => void
   onSelectEffort: (effort: AgentReasoningEffort) => void
   onSelectModel: (model: DetectedModelItem) => void
   onScan: () => void
@@ -78,12 +76,12 @@ export function modelEfforts(
 export function useHouseAgentModelLabels() {
   const i18n = usePascalI18n()
   return {
-    profile: {
+    stages: {
       layout: i18n._({ id: 'app.houseAgent.scope.layout', message: 'Layout' }),
       structure: i18n._({ id: 'app.houseAgent.scope.structure', message: 'Structure' }),
       interiors: i18n._({ id: 'app.houseAgent.scope.interiors', message: 'Interiors' }),
       review: i18n._({ id: 'app.houseAgent.scope.review', message: 'Full review' }),
-    } satisfies Record<AgentBuildProfile, string>,
+    } satisfies Record<HouseBuildStage, string>,
     effort: {
       auto: i18n._({ id: 'app.houseAgent.effort.auto', message: 'Auto' }),
       none: i18n._({ id: 'app.houseAgent.effort.none', message: 'None' }),
@@ -99,7 +97,6 @@ export function useHouseAgentModelLabels() {
 
 export function HouseAgentArchitectPopover({
   tab,
-  profile,
   effort,
   currentModel,
   detectedModels,
@@ -108,7 +105,6 @@ export function HouseAgentArchitectPopover({
   scanError,
   canScan,
   onTabChange,
-  onSelectProfile,
   onSelectEffort,
   onSelectModel,
   onScan,
@@ -197,7 +193,7 @@ export function HouseAgentArchitectPopover({
             <Layers3 size={23} className="shrink-0 text-sky-300" />
             <div className="min-w-0">
               <h4 className="font-semibold">
-                {i18n._({ id: 'app.houseAgent.scope.title', message: 'Build scope' })}
+                {i18n._({ id: 'app.houseAgent.plan.stepsTitle', message: 'Construction sequence' })}
               </h4>
               {currentModel && (
                 <p className="mt-1 flex items-center gap-1.5 break-all text-zinc-400">
@@ -211,23 +207,22 @@ export function HouseAgentArchitectPopover({
               )}
             </div>
           </div>
-          <div className="divide-y divide-white/10">
-            {scopes.map((scope) => (
-              <button
-                type="button"
-                key={scope.id}
-                aria-pressed={profile === scope.id}
-                onClick={() => onSelectProfile(scope.id)}
-                className="flex w-full items-start gap-2 rounded-lg p-2.5 text-left hover:bg-white/5 aria-pressed:bg-sky-300/10"
-              >
-                <span className="flex-1">
-                  <span className="block font-medium">{labels.profile[scope.id]}</span>
-                  <span className="mt-0.5 block leading-4 text-zinc-400">{scope.description}</span>
+          <ol
+            aria-label={i18n._({ id: 'app.houseAgent.scope.title', message: 'Build scope' })}
+            className="space-y-1"
+          >
+            {scopes.map((scope, index) => (
+              <li key={scope.id} className="flex items-start gap-3 rounded-lg bg-white/5 p-2.5">
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-sky-300/10 font-mono text-sky-200">
+                  {index + 1}
                 </span>
-                {profile === scope.id && <Check size={15} className="shrink-0 text-sky-300" />}
-              </button>
+                <div className="min-w-0">
+                  <p className="font-medium">{labels.stages[scope.id]}</p>
+                  <p className="mt-0.5 leading-4 text-zinc-400">{scope.description}</p>
+                </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       ) : (
         <>

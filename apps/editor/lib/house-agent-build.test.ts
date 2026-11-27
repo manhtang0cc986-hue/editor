@@ -46,19 +46,41 @@ test('a single brief can build and check an editable house without loading the a
       widthMeters: 8,
       depthMeters: 4,
       heightMeters: 4.5,
-      levels: [{ name: 'Ground floor', heightMeters: 3, furniture: ['Living room: sofa'] }],
+      levels: [{ name: 'Ground floor', heightMeters: 3, furniture: [] }],
       phases: [
-        { title: 'Structure', level: 'Ground floor', tasks: ['Create the rooms'] },
-        { title: 'Roof', level: 'Ground floor', tasks: ['Add the roof'] },
+        { stage: 'layout', title: 'Rooms', level: 'Ground floor', tasks: ['Create the rooms'] },
+        { stage: 'structure', title: 'Roof', level: 'Ground floor', tasks: ['Add the roof'] },
+        {
+          stage: 'interiors',
+          title: 'Interiors',
+          level: 'Ground floor',
+          tasks: ['Check that rooms are clear as requested'],
+        },
+        {
+          stage: 'review',
+          title: 'Review',
+          level: 'Ground floor',
+          tasks: ['Verify the whole house'],
+        },
       ],
     },
   }
   const batches: { name: string; input: Record<string, unknown> }[][] = [
     [{ name: 'add_level', input: {} }],
+    [
+      {
+        name: 'submit_house_plan',
+        input: {
+          ...plan,
+          automation: { ...plan.automation, phases: plan.automation.phases.slice(0, 2) },
+        },
+      },
+    ],
     [{ name: 'submit_house_plan', input: plan }],
     [
       { name: 'add_level', input: {} },
       { name: 'read_house_plan', input: {} },
+      { name: 'add_level', input: {} },
     ],
     [{ name: 'add_level', input: { name: 'Ground floor', height: 3 } }],
     [
@@ -91,28 +113,36 @@ test('a single brief can build and check an editable house without loading the a
       },
     ],
     [
-      { name: 'complete_house_phase', input: { phaseNumber: 1, result: 'Rooms created' } },
       { name: 'get_level_summary', input: {} },
+      { name: 'complete_house_phase', input: { phaseNumber: 1, result: 'Rooms created' } },
+    ],
+    [
       {
         name: 'complete_house_phase',
         input: { phaseNumber: 1, result: 'Both room zones present' },
       },
     ],
-    [
-      { name: 'read_house_plan', input: {} },
-      { name: 'create_roof', input: {} },
-    ],
-    [
-      { name: 'verify_scene', input: {} },
-      { name: 'complete_house_phase', input: { phaseNumber: 2, result: 'Roof verified' } },
-    ],
+    [{ name: 'create_roof', input: {} }],
+    [{ name: 'read_house_plan', input: {} }],
+    [{ name: 'create_roof', input: {} }],
+    [{ name: 'get_level_summary', input: {} }],
+    [{ name: 'complete_house_phase', input: { phaseNumber: 2, result: 'Roof level present' } }],
+    [{ name: 'read_house_plan', input: {} }],
+    [{ name: 'get_level_summary', input: {} }],
+    [{ name: 'complete_house_phase', input: { phaseNumber: 3, result: 'Rooms are clear' } }],
+    [{ name: 'read_house_plan', input: {} }],
+    [{ name: 'verify_scene', input: {} }],
+    [{ name: 'complete_house_phase', input: { phaseNumber: 4, result: 'House checked' } }],
   ]
 
   try {
     const result = await runHouseAgent({
-      messages: [{ role: 'user', content: '建一栋带客厅、卧室和屋顶的单层小房子。' }],
+      messages: [
+        { role: 'user', content: '建一栋带客厅、卧室和屋顶的单层小房子，房间保持无家具。' },
+      ],
       mode: 'build',
       managedBuild: true,
+      maxRounds: 32,
       signal: new AbortController().signal,
       request: async () => {
         const batch = batches[round++]
@@ -145,13 +175,26 @@ test('a single brief can build and check an editable house without loading the a
       result.messages
         .flatMap((message) => (message.role === 'tool' ? [JSON.parse(message.content).code] : []))
         .filter(Boolean),
-    ).toEqual(['plan_phase_required', 'plan_phase_required', 'phase_not_checked'])
+    ).toEqual([
+      'plan_phase_required',
+      'invalid_build_stages',
+      'plan_phase_required',
+      'plan_phase_required',
+      'phase_not_checked',
+      'plan_phase_required',
+    ])
+    const nextPhase = result.messages
+      .flatMap((message) => (message.role === 'tool' ? [JSON.parse(message.content)] : []))
+      .find((reply) => reply.phase?.stage === 'structure')
+    expect(nextPhase).toMatchObject({ phaseNumber: 2, previousCheck: 'Both room zones present' })
     expect(operations).toEqual([
       'add_level',
       'create_room',
       'create_room',
       'get_level_summary',
       'create_roof',
+      'get_level_summary',
+      'get_level_summary',
       'verify_scene',
     ])
     expect(fetchCatalog).not.toHaveBeenCalled()
@@ -187,8 +230,8 @@ test('a single brief can build and check an editable house without loading the a
         { name: 'get_node', input: { id: window.id } },
         { name: 'submit_house_plan', input: repair },
       ],
+      [{ name: 'read_house_plan', input: {} }],
       [
-        { name: 'read_house_plan', input: {} },
         { name: 'place_building', input: {} },
         { name: 'delete_node', input: { id: ground.id } },
         {
@@ -197,10 +240,8 @@ test('a single brief can build and check an editable house without loading the a
         },
         { name: 'move_node', input: { id: window.id, by: [0, 0], y: sill + 0.1 } },
       ],
-      [
-        { name: 'verify_scene', input: {} },
-        { name: 'complete_house_phase', input: { phaseNumber: 1, result: 'Checked the new sill' } },
-      ],
+      [{ name: 'verify_scene', input: {} }],
+      [{ name: 'complete_house_phase', input: { phaseNumber: 1, result: 'Checked the new sill' } }],
     ]
     let repairRound = 0
     const repaired = await runHouseAgent({

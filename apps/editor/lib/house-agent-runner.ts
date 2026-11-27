@@ -3,6 +3,7 @@ import {
   type AgentMessage,
   type AgentMode,
   type AgentStreamEvent,
+  HouseBuildStageSchema,
   type HousePlan,
   type HousePlanProgress,
   HousePlanSchema,
@@ -166,6 +167,18 @@ function repairWouldReplaceScene(
   return type === 'site' || type === 'building' || type === 'level'
 }
 
+function hasOrderedBuildStages(automation: NonNullable<HousePlan['automation']>): boolean {
+  const stages = HouseBuildStageSchema.options
+  let current = -1
+  for (const phase of automation.phases) {
+    const stage = phase.stage ? stages.indexOf(phase.stage) : -1
+    if (stage < 0 || stage < current || stage > current + 1) return false
+    if (stage === current && phase.stage === 'review') return false
+    current = stage
+  }
+  return current === stages.length - 1
+}
+
 export async function runHouseAgent(options: HouseAgentRunOptions): Promise<HouseAgentRunResult> {
   const {
     signal,
@@ -189,8 +202,9 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
   let planSubmitted = false
   let activePlan: HousePlan | undefined
   const phaseChecks: string[] = []
-  let phaseRead = false
-  let phaseChecked = false
+  let phaseReadAt = -1
+  let phaseCheckedAt = -1
+  let phaseVerifiedAt = -1
   let inspectedScene = false
   let promptedToContinue = false
   let blockedWrite = false
@@ -364,6 +378,14 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                       'incomplete_build_plan',
                       'Include the building type, overall dimensions, levels, furniture, phases and, for repairs, the inspected before condition.',
                     )
+                  } else if (
+                    plan.automation.intent === 'build' &&
+                    !hasOrderedBuildStages(plan.automation)
+                  ) {
+                    rawResult = failure(
+                      'invalid_build_stages',
+                      'Plan layout, structure, interiors, and one final review, in that order. Set the stage on every phase.',
+                    )
                   } else if (wroteScene) {
                     rawResult = failure(
                       'plan_in_progress',
@@ -372,15 +394,15 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                   } else {
                     activePlan = plan
                     phaseChecks.length = 0
-                    phaseRead = false
-                    phaseChecked = false
+                    phaseReadAt = -1
+                    phaseCheckedAt = -1
+                    phaseVerifiedAt = -1
                     blockedWrite = false
                     onPhase?.({ completed: 0, total: plan.automation.phases.length, checks: [] })
                     rawResult = { status: 'plan_recorded', plan }
                   }
                 } else if (name === 'read_house_plan') {
                   const phase = automation?.phases[phaseChecks.length]
-                  phaseRead = Boolean(phase)
                   rawResult = automation
                     ? {
                         plan: activePlan?.title,
@@ -389,6 +411,7 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                         depthMeters: automation.depthMeters,
                         heightMeters: automation.heightMeters,
                         completed: phaseChecks.length,
+                        previousCheck: phaseChecks.at(-1),
                         ...(phase
                           ? {
                               phaseNumber: phaseChecks.length + 1,
@@ -415,23 +438,28 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                     .safeParse(args)
                   if (
                     !automation ||
-                    !phaseRead ||
-                    !phaseChecked ||
+                    phaseReadAt < 0 ||
+                    phaseCheckedAt < 0 ||
+                    phaseCheckedAt === round ||
                     checkpoint.data?.phaseNumber !== phaseChecks.length + 1
                   ) {
                     rawResult = failure(
                       'phase_not_checked',
-                      'Read the next phase, carry out its tasks and inspect the relevant scene before recording completion.',
+                      'Read the current phase, carry out its tasks, and review the scene inspection result before recording completion.',
                     )
-                  } else if (phaseChecks.length === automation.phases.length - 1 && !verifyResult) {
+                  } else if (
+                    phaseChecks.length === automation.phases.length - 1 &&
+                    (phaseVerifiedAt < 0 || phaseVerifiedAt === round)
+                  ) {
                     rawResult = failure(
                       'verification_required',
                       'Run verify_scene on the whole scene after the last edit before closing the final phase.',
                     )
                   } else {
                     phaseChecks.push(checkpoint.data.result)
-                    phaseRead = false
-                    phaseChecked = false
+                    phaseReadAt = -1
+                    phaseCheckedAt = -1
+                    phaseVerifiedAt = -1
                     onPhase?.({
                       completed: phaseChecks.length,
                       total: automation.phases.length,
@@ -443,11 +471,15 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                       result: checkpoint.data.result,
                     }
                   }
-                } else if (managedBuild && tool.write && (!automation || !phaseRead)) {
+                } else if (
+                  managedBuild &&
+                  tool.write &&
+                  (!automation || phaseReadAt < 0 || phaseReadAt === round)
+                ) {
                   blockedWrite = !automation
                   rawResult = failure(
                     'plan_phase_required',
-                    'Submit the plan and read the next phase before making scene changes.',
+                    'Read the current phase and wait for its tool result before making scene changes.',
                   )
                 } else if (
                   managedBuild &&
@@ -465,16 +497,29 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                     signal,
                     ...(imageConfig ? { imageConfig } : {}),
                   })
-                  if (tool.write) phaseChecked = false
+                  if (tool.write) {
+                    phaseCheckedAt = -1
+                    phaseVerifiedAt = -1
+                  }
                   if (!rawResult.error && SCENE_INSPECTIONS.has(name)) {
                     inspectedScene = true
-                    if (phaseRead) phaseChecked = true
                   }
                 }
                 const prepared = prepareToolResult(name, rawResult, pictures)
                 result = prepared.output
                 acceptedPreviews = prepared.acceptedPreviews
                 status = result.error ? 'error' : 'completed'
+                if (status === 'completed') {
+                  if (name === 'read_house_plan' && rawResult.phase && phaseReadAt < 0) {
+                    phaseReadAt = round
+                  } else if (
+                    SCENE_INSPECTIONS.has(name) &&
+                    phaseReadAt >= 0 &&
+                    phaseReadAt < round
+                  ) {
+                    phaseCheckedAt = round
+                  }
+                }
                 if (!rawResult.error) {
                   if (tool.write && (status === 'completed' || managedBuild)) {
                     wroteScene = true
@@ -484,6 +529,9 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                     name === 'verify_scene' &&
                     !('room' in (args as object) || 'type' in (args as object))
                   ) {
+                    if (status === 'completed' && phaseReadAt >= 0 && phaseReadAt < round) {
+                      phaseVerifiedAt = round
+                    }
                     wroteSinceLastVerify = false
                     const rawIssues = Array.isArray(rawResult.issues)
                       ? rawResult.issues.map((i) => (typeof i === 'string' ? i : JSON.stringify(i)))

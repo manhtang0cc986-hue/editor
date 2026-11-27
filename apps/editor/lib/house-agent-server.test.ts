@@ -133,7 +133,7 @@ export const samplePlanFixture: HousePlan = {
   openQuestions: [],
 }
 
-test('sends the chosen build scope and provider reasoning effort independently', async () => {
+test('keeps provider reasoning effort independent of plan mode', async () => {
   await agentStep(
     [{ role: 'user', content: 'Plan a two-storey home.' }],
     'plan',
@@ -142,13 +142,13 @@ test('sends the chosen build scope and provider reasoning effort independently',
     async (_url, init) => {
       const body = JSON.parse(String(init?.body))
       expect(body.reasoning_effort).toBe('xhigh')
-      expect(body.messages[0].content).toContain('include furnishing, room materials, and finishes')
+      expect(body.messages[0].content).toContain('Plan only.')
       expect(body.messages[1].content).toBe('Plan a two-storey home.')
       return Response.json({
         choices: [{ message: { role: 'assistant', content: 'Plan ready.' } }],
       })
     },
-    { buildProfile: 'interiors', reasoningEffort: 'xhigh' },
+    { reasoningEffort: 'xhigh' },
   )
 })
 
@@ -165,6 +165,7 @@ test('a direct house brief defaults to the complete workflow without requiring p
       expect(body.messages[0].content).toContain('Group independent rooms')
       expect(body.messages[0].content).toContain('Verify with verify_scene after the last edit')
       expect(body.messages[0].content).toContain('furnishing, room materials, and finishes')
+      expect(body.messages[0].content).toContain('wait for its result')
       expect(body.messages[1].content).toBe(brief)
       expect(
         body.tools.map(({ function: { name } }: { function: { name: string } }) => name),

@@ -86,14 +86,14 @@ export const HOST_AGENT_CONTRACTS: readonly AgentToolContract[] = [
     name: 'read_house_plan',
     title: 'Read current house plan and next phase',
     description:
-      'Read the accepted plan and its next pending phase. Call before editing each phase.',
+      'Read the accepted plan, the previous check, and the next pending phase. Wait for this result before carrying out the phase.',
     input: {},
   },
   {
     name: 'complete_house_phase',
     title: 'Record completed house construction phase',
     description:
-      'After checking the current phase against the live scene, record its result. Use the one-based phaseNumber from read_house_plan.',
+      'After reading the live scene inspection result for this phase, record the evidence. Use the one-based phaseNumber from read_house_plan.',
     input: {
       phaseNumber: z.number().int().min(1),
       result: z.string().min(1).max(600),

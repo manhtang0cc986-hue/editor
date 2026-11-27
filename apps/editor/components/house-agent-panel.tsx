@@ -30,8 +30,6 @@ import {
   saveAgentChat,
 } from '@/lib/house-agent-history'
 import {
-  type AgentBuildProfile,
-  AgentBuildProfileSchema,
   type AgentClientConfig,
   type AgentConfiguration,
   type AgentMessage,
@@ -118,7 +116,6 @@ type StoredSettings = {
   model: string
   apiKey: string
   reasoningEffort?: AgentReasoningEffort
-  buildProfile?: AgentBuildProfile
   modelTab?: HouseAgentModelTab
 }
 
@@ -135,7 +132,6 @@ function loadStoredSettings(): StoredSettings {
       model: typeof parsed.model === 'string' ? parsed.model : '',
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
       reasoningEffort: AgentReasoningEffortSchema.safeParse(parsed.reasoningEffort).data,
-      buildProfile: AgentBuildProfileSchema.safeParse(parsed.buildProfile).data,
       modelTab: parsed.modelTab === 'models' ? 'models' : 'architect',
     }
   } catch {
@@ -293,7 +289,6 @@ export function HouseAgentPanel({
   const [envSaveState, setEnvSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [envSaveError, setEnvSaveError] = useState('')
   const modelTab = customSettings.modelTab ?? 'architect'
-  const buildProfile = customSettings.buildProfile ?? 'interiors'
   const chatModels = agentModels.models.filter((model) => model.kind === 'chat')
   const agentBaseUrl =
     customSettings.baseUrl.trim() || config?.baseUrl || 'https://api.openai.com/v1'
@@ -334,7 +329,6 @@ export function HouseAgentPanel({
     ...(customSettings.model.trim() ? { model: customSettings.model.trim() } : {}),
     ...(customSettings.apiKey.trim() ? { apiKey: customSettings.apiKey.trim() } : {}),
     ...(reasoningEffort !== 'auto' || modelTab === 'models' ? { reasoningEffort } : {}),
-    ...(modelTab === 'architect' ? { buildProfile } : {}),
   }
 
   const imageRuntimeOverride: ImageClientConfig | undefined =
@@ -447,13 +441,10 @@ export function HouseAgentPanel({
       markEnvChanged('agent')
     }
     setCustomSettings((previous) => ({ ...previous, ...patch }))
-    if (patch.modelTab !== undefined || patch.buildProfile !== undefined) {
+    if (patch.modelTab !== undefined) {
       try {
-        const { buildProfile, modelTab } = { ...customSettings, ...patch }
-        window.localStorage.setItem(
-          SETTINGS_STORAGE_KEY,
-          JSON.stringify({ buildProfile, modelTab }),
-        )
+        const { modelTab } = patch
+        window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ modelTab }))
       } catch {
         // Browser preferences are optional.
       }
@@ -614,11 +605,8 @@ export function HouseAgentPanel({
           }
           try {
             if (target === 'agent') {
-              const { buildProfile, modelTab } = loadStoredSettings()
-              window.localStorage.setItem(
-                SETTINGS_STORAGE_KEY,
-                JSON.stringify({ buildProfile, modelTab }),
-              )
+              const { modelTab } = loadStoredSettings()
+              window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ modelTab }))
             } else {
               window.localStorage.removeItem(IMAGE_SETTINGS_STORAGE_KEY)
             }
@@ -872,14 +860,14 @@ export function HouseAgentPanel({
         messages: next,
         mode,
         signal: abort.signal,
-        maxRounds: 64,
+        maxRounds: mode === 'build' ? 110 : 64,
         managedBuild: mode === 'build',
         nodeType: (id) => useScene.getState().nodes[id as AnyNodeId]?.type,
         onPhase: (progress) => {
           latestProgress = progress
           setPlanProgress(progress)
         },
-        maxToolCalls: 100,
+        maxToolCalls: mode === 'build' ? 125 : 100,
         execute: executeHouseAgentTool,
         ...(imageRuntimeOverride ? { imageConfig: imageRuntimeOverride } : {}),
         requestStream: (history, runMode, signal, onDelta) =>
@@ -1759,7 +1747,6 @@ export function HouseAgentPanel({
                 {showArchitectPopover && (
                   <HouseAgentArchitectPopover
                     tab={pickerTab}
-                    profile={buildProfile}
                     effort={reasoningEffort}
                     currentModel={effectiveModelLabel}
                     detectedModels={chatModels}
@@ -1768,9 +1755,6 @@ export function HouseAgentPanel({
                     scanError={agentModels.error}
                     canScan={canScanAgentModels}
                     onTabChange={setPickerTab}
-                    onSelectProfile={(profile) => {
-                      updateCustomSettings({ buildProfile: profile, modelTab: 'architect' })
-                    }}
                     onSelectEffort={(effort) => updateCustomSettings({ reasoningEffort: effort })}
                     onSelectModel={selectChatModel}
                     onScan={scanAgentModels}
@@ -1830,7 +1814,10 @@ export function HouseAgentPanel({
                     </span>
                     <span className="min-w-0 truncate whitespace-nowrap text-zinc-400">
                       {modelTab === 'architect'
-                        ? modelLabels.profile[buildProfile]
+                        ? i18n._({
+                            id: 'app.houseAgent.plan.stepsTitle',
+                            message: 'Construction sequence',
+                          })
                         : modelLabels.effort[reasoningEffort]}
                     </span>
                     <ChevronDown
