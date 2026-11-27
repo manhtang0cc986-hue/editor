@@ -180,6 +180,7 @@ export function HouseAgentPanel({
   const [events, setEvents] = useState<HouseAgentToolEvent[]>([])
   const [currentPlan, setCurrentPlan] = useState<HousePlan | null>(null)
   const [planProgress, setPlanProgress] = useState<HousePlanProgress | null>(null)
+  const [resumeWroteScene, setResumeWroteScene] = useState<boolean>()
   const [draft, setDraft] = useState('')
   const [images, setImages] = useState<{ name: string; url: string }[]>([])
   const [busy, setBusy] = useState(false)
@@ -212,6 +213,14 @@ export function HouseAgentPanel({
       : requestedEffort
   const effectiveImageConfigured = imageConfigStatus?.configured === true
   const effectiveImageModelLabel = imageConfigStatus?.model || ''
+  const unfinishedPlan =
+    resumeWroteScene !== undefined &&
+    currentPlan?.automation &&
+    planProgress &&
+    planProgress.completed < planProgress.total
+      ? { plan: currentPlan, progress: planProgress, wroteScene: resumeWroteScene }
+      : undefined
+  const resumeLabel = i18n._({ id: 'app.houseAgent.resumeBuild', message: 'Resume build' })
 
   const runtimeOverride: AgentClientConfig = {
     ...(modelOverride ? { model: modelOverride } : {}),
@@ -334,6 +343,7 @@ export function HouseAgentPanel({
   }
 
   async function addFiles(files: File[]) {
+    if (controller.current || busy || reading || capturing) return
     if (
       files.length + images.length > MAX_AGENT_IMAGES ||
       files.some(
@@ -374,7 +384,7 @@ export function HouseAgentPanel({
   }
 
   async function handleCaptureViewport() {
-    if (busy || capturing || images.length >= MAX_AGENT_IMAGES) return
+    if (busy || reading || capturing || images.length >= MAX_AGENT_IMAGES) return
     setCapturing(true)
     setNotice('')
     try {
@@ -456,7 +466,7 @@ export function HouseAgentPanel({
   }
 
   function newChat() {
-    if (busy || reading) return
+    if (busy || reading || capturing) return
     historyRequest.current += 1
     followConversation.current = true
     setChatId(crypto.randomUUID())
@@ -464,6 +474,7 @@ export function HouseAgentPanel({
     setEvents([])
     setCurrentPlan(null)
     setPlanProgress(null)
+    setResumeWroteScene(undefined)
     setStreamState(null)
     setHasPlan(false)
     setHasBuilt(false)
@@ -491,10 +502,12 @@ export function HouseAgentPanel({
     }
   }
 
-  async function send(mode: AgentMode) {
-    if (controller.current || busy || reading || !effectiveConfigured) return
+  async function send(mode: AgentMode, resume = false) {
+    if (controller.current || busy || reading || capturing || !effectiveConfigured) return
+    const checkpoint = resume ? unfinishedPlan : undefined
+    if (resume && (!checkpoint || draft.trim() || images.length)) return
     const rawText =
-      draft.trim() ||
+      (checkpoint ? resumeLabel : draft.trim()) ||
       (mode === 'build'
         ? '请直接建模。已有确认方案时按方案建造，缺少尺寸时使用建议尺寸，并在完成后检查场景。'
         : '请根据当前场景和我提供的参考资料，提交完整的房屋方案，并标注建议尺寸。')
@@ -538,12 +551,14 @@ export function HouseAgentPanel({
     try {
       let latestPlan = mode === 'plan' ? null : currentPlan
       let latestProgress = mode === 'plan' ? null : planProgress
+      let workingPlan = checkpoint?.plan
       const result = await runHouseAgent({
         messages: next,
         mode,
         signal: abort.signal,
         maxRounds: mode === 'build' ? 110 : 64,
         managedBuild: mode === 'build',
+        ...(checkpoint ? { resume: checkpoint } : {}),
         nodeType: (id) => useScene.getState().nodes[id as AnyNodeId]?.type,
         onPhase: (progress) => {
           latestProgress = progress
@@ -557,11 +572,31 @@ export function HouseAgentPanel({
         onStream: setStreamState,
         onPlan: (plan) => {
           latestPlan = plan
+          workingPlan = plan
           setCurrentPlan(plan)
         },
         onTool: (event) =>
           setEvents((previous) => [...previous.filter((item) => item.id !== event.id), event]),
       })
+      if (result.status === 'error' && result.messages.length === next.length && !checkpoint) {
+        setMessages(messages)
+        setDraft(draft)
+        setImages(images)
+        setCurrentPlan(currentPlan)
+        setPlanProgress(planProgress)
+        setHasPlan(hasPlan)
+        setNotice(result.error ?? '')
+        return
+      }
+      const resumable =
+        result.status !== 'completed' &&
+        mode === 'build' &&
+        workingPlan?.automation &&
+        latestProgress &&
+        latestProgress.completed < latestProgress.total
+          ? Boolean(result.wroteScene)
+          : undefined
+      setResumeWroteScene(resumable)
       setOpenItems(result.verifyResult?.issues ?? [])
       const planPending =
         mode === 'plan'
@@ -583,6 +618,7 @@ export function HouseAgentPanel({
           plan: latestPlan,
           ...(latestProgress ? { planProgress: latestProgress } : {}),
           planPending,
+          ...(resumable !== undefined ? { resumeWroteScene: resumable } : {}),
         })
       } catch {
         setNotice(
@@ -760,7 +796,7 @@ export function HouseAgentPanel({
                 disabled={busy || reading}
                 className="block w-full truncate rounded-lg bg-white/5 p-2 text-left text-xs hover:bg-white/10 disabled:opacity-40"
                 onClick={() => {
-                  if (controller.current || busy || reading) return
+                  if (controller.current || busy || reading || capturing) return
                   historyRequest.current += 1
                   followConversation.current = true
                   setWorkspaceTab('build')
@@ -768,6 +804,7 @@ export function HouseAgentPanel({
                   setMessages(record.messages)
                   setCurrentPlan(record.plan)
                   setPlanProgress(record.planProgress ?? null)
+                  setResumeWroteScene(record.resumeWroteScene)
                   setHasPlan(record.plan !== null && record.planPending === true)
                   setHasBuilt(false)
                   setNeedsReverify(false)
@@ -1025,28 +1062,6 @@ export function HouseAgentPanel({
                 />
               )}
 
-              {images.length > 0 && (
-                <div className="flex gap-2 overflow-auto">
-                  {images.map((image, idx) => (
-                    <button
-                      key={`${image.name}-${idx}`}
-                      type="button"
-                      disabled={busy}
-                      onClick={() => setImages((items) => items.filter((_, i) => i !== idx))}
-                      title={i18n._({ id: 'app.houseAgent.removeImage', message: 'Remove image' })}
-                      className="relative shrink-0"
-                    >
-                      <img
-                        src={image.url}
-                        alt={image.name}
-                        className="h-14 w-18 rounded border border-white/20 object-cover"
-                      />
-                      <X size={12} className="absolute top-0 right-0 bg-black" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
               {config && !effectiveConfigured && <ModelApiSetupHint />}
               <div
                 ref={modelPicker}
@@ -1071,23 +1086,29 @@ export function HouseAgentPanel({
                   />
                 )}
                 <div className="mb-2 flex min-w-0 items-center gap-1.5">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      setPreferredMode((prev) => (prev === 'build' ? 'plan' : 'build'))
-                    }
-                    title={i18n._({
+                  <div
+                    role="group"
+                    aria-label={i18n._({
                       id: 'app.houseAgent.mode.toggleHint',
                       message: 'Switch between Plan only and Direct 3D Build',
                     })}
-                    className={`flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 font-medium text-[11px] whitespace-nowrap transition-colors disabled:opacity-45 ${preferredMode === 'build' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20' : 'border-sky-400/25 bg-sky-400/10 text-sky-200 hover:bg-sky-400/20'}`}
+                    className="flex shrink-0 rounded-lg border border-white/10 bg-black/25 p-0.5"
                   >
-                    <DraftingCompass size={12} />
-                    {preferredMode === 'build'
-                      ? i18n._({ id: 'app.houseAgent.mode.buildLabel', message: 'Build' })
-                      : i18n._({ id: 'app.houseAgent.mode.planLabel', message: 'Plan' })}
-                  </button>
+                    {(['plan', 'build'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        aria-pressed={preferredMode === mode}
+                        disabled={busy}
+                        onClick={() => setPreferredMode(mode)}
+                        className="rounded-md px-2 py-1 font-medium text-[11px] text-zinc-400 hover:text-white aria-pressed:bg-sky-300/15 aria-pressed:text-sky-100 disabled:opacity-50"
+                      >
+                        {mode === 'build'
+                          ? i18n._({ id: 'app.houseAgent.mode.buildLabel', message: 'Build' })
+                          : i18n._({ id: 'app.houseAgent.mode.planLabel', message: 'Plan' })}
+                      </button>
+                    ))}
+                  </div>
                   <button
                     ref={modelTrigger}
                     type="button"
@@ -1097,7 +1118,7 @@ export function HouseAgentPanel({
                       if (!showArchitectPopover) setPickerTab(modelTab)
                       setShowArchitectPopover(!showArchitectPopover)
                     }}
-                    className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-[11px] text-zinc-200 hover:bg-white/10 disabled:opacity-50"
+                    className="ml-auto inline-flex h-7 min-w-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-[11px] text-zinc-200 hover:bg-white/10 disabled:opacity-50"
                   >
                     {modelTab === 'models' && effectiveModelLabel && (
                       <HouseAgentModelLogo
@@ -1128,12 +1149,56 @@ export function HouseAgentPanel({
                     />
                   </button>
                 </div>
+                {images.length > 0 && (
+                  <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
+                    {images.map((image, index) => (
+                      <div
+                        className="flex max-w-36 shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 p-1 text-xs text-zinc-300"
+                        key={`${image.name}-${index}`}
+                      >
+                        <img
+                          src={image.url}
+                          alt=""
+                          className="size-7 shrink-0 rounded object-cover"
+                        />
+                        <span className="truncate" title={image.name}>
+                          {image.name}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={i18n._({
+                            id: 'app.houseAgent.removeImage',
+                            message: 'Remove image',
+                          })}
+                          disabled={busy}
+                          onClick={() =>
+                            setImages((items) =>
+                              items.filter((_, itemIndex) => itemIndex !== index),
+                            )
+                          }
+                          className="shrink-0 rounded p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <textarea
                   ref={composer}
                   value={draft}
                   maxLength={30_000}
                   disabled={busy}
                   onPaste={(event) => void handlePaste(event)}
+                  onDragOver={(event) => {
+                    if (event.dataTransfer.types.includes('Files')) event.preventDefault()
+                  }}
+                  onDrop={(event) => {
+                    const files = Array.from(event.dataTransfer.files)
+                    if (!files.length) return
+                    event.preventDefault()
+                    void addFiles(files)
+                  }}
                   onChange={(event) => setDraft(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing)
@@ -1141,7 +1206,7 @@ export function HouseAgentPanel({
                     event.preventDefault()
                     if (draft.trim() || images.length) void send(preferredMode)
                   }}
-                  className="min-h-16 w-full resize-none bg-transparent px-1 text-[13px] leading-5 text-zinc-100 outline-none placeholder:text-zinc-500"
+                  className="field-sizing-content min-h-16 max-h-36 w-full resize-none overflow-y-auto bg-transparent px-1 text-[13px] leading-5 text-zinc-100 outline-none placeholder:text-zinc-500"
                   placeholder={i18n._({
                     id: 'app.houseAgent.placeholder',
                     message:
@@ -1179,7 +1244,7 @@ export function HouseAgentPanel({
 
                   <button
                     type="button"
-                    disabled={busy || capturing || images.length >= MAX_AGENT_IMAGES}
+                    disabled={busy || reading || capturing || images.length >= MAX_AGENT_IMAGES}
                     onClick={() => void handleCaptureViewport()}
                     title={i18n._({
                       id: 'app.houseAgent.captureView',
@@ -1196,7 +1261,7 @@ export function HouseAgentPanel({
 
                   <button
                     type="button"
-                    disabled={busy}
+                    disabled={busy || reading || capturing}
                     onClick={() => setShowPicker((v) => !v)}
                     title={i18n._({
                       id: 'app.houseAgent.openPicker',
@@ -1247,7 +1312,10 @@ export function HouseAgentPanel({
                       <button
                         type="button"
                         disabled={
-                          !effectiveConfigured || reading || (!draft.trim() && !images.length)
+                          !effectiveConfigured ||
+                          reading ||
+                          capturing ||
+                          (!draft.trim() && !images.length)
                         }
                         onClick={() => void send(preferredMode)}
                         title={
@@ -1275,7 +1343,34 @@ export function HouseAgentPanel({
                 </div>
               </div>
 
-              {hasPlan && !busy && (
+              {unfinishedPlan && !busy && (
+                <div className="flex items-center justify-between gap-2 rounded-xl border border-sky-300/20 bg-sky-300/[0.06] p-2">
+                  <span className="min-w-0 truncate text-xs text-zinc-300">
+                    {unfinishedPlan.progress.completed}/{unfinishedPlan.progress.total}
+                    {' · '}
+                    {
+                      unfinishedPlan.plan.automation?.phases[unfinishedPlan.progress.completed]
+                        ?.title
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void send('build', true)}
+                    disabled={
+                      !effectiveConfigured ||
+                      reading ||
+                      capturing ||
+                      Boolean(draft.trim()) ||
+                      images.length > 0
+                    }
+                    className="shrink-0 rounded-lg bg-sky-300 px-2.5 py-1.5 font-semibold text-xs text-sky-950 hover:bg-sky-200 disabled:opacity-40"
+                  >
+                    {resumeLabel}
+                  </button>
+                </div>
+              )}
+
+              {hasPlan && !unfinishedPlan && !busy && (
                 <button
                   type="button"
                   onClick={() => void send('build')}

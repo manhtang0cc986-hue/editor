@@ -36,6 +36,7 @@ export type HouseAgentRunOptions = {
   mode: AgentMode
   signal: AbortSignal
   managedBuild?: boolean
+  resume?: { plan: HousePlan; progress: HousePlanProgress; wroteScene: boolean }
   nodeType?: (id: string) => string | undefined
   maxRounds?: number
   maxToolCalls?: number
@@ -194,21 +195,24 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
     onPhase,
     nodeType,
     managedBuild = false,
+    resume,
     maxRounds = DEFAULT_MAX_MODEL_ROUNDS,
     maxToolCalls = DEFAULT_MAX_TOOL_CALLS,
   } = options
   const messages = [...options.messages]
   const publish = () => onMessages?.([...messages])
   let planSubmitted = false
-  let activePlan: HousePlan | undefined
-  const phaseChecks: string[] = []
+  const resumed = managedBuild && mode === 'build' ? resume : undefined
+  let activePlan = resumed?.plan
+  const phaseChecks = [...(resumed?.progress.checks ?? [])]
+  let checkExistingPhase = Boolean(resumed)
   let phaseReadAt = -1
   let phaseCheckedAt = -1
   let phaseVerifiedAt = -1
   let inspectedScene = false
   let promptedToContinue = false
   let blockedWrite = false
-  let wroteScene = false
+  let wroteScene = resumed?.wroteScene ?? false
   let wroteSinceLastVerify = false
   let viewSceneSuccess: boolean | undefined
   let verifyResult: { ok: boolean; issues: string[] } | null = null
@@ -251,6 +255,18 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
       ...(error ? { error } : {}),
     }
   }
+  if (resumed) {
+    const phases = activePlan?.automation?.phases
+    if (
+      !phases ||
+      resumed.progress.total !== phases.length ||
+      phaseChecks.length !== resumed.progress.completed ||
+      phaseChecks.length >= phases.length
+    ) {
+      return finish('error', 'The saved construction checkpoint is invalid.')
+    }
+  }
+
   let calls = 0
   publish()
 
@@ -369,7 +385,12 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                 if (managedBuild && name === 'submit_house_plan') {
                   const validated = HousePlanSchema.safeParse(args)
                   const plan = validated.data
-                  if (
+                  if (resumed) {
+                    rawResult = failure(
+                      'plan_in_progress',
+                      'This run is resuming the saved plan. Read the existing plan and finish its unfinished phases.',
+                    )
+                  } else if (
                     !plan?.automation ||
                     (plan.automation.intent === 'repair' &&
                       (!plan.automation.repairBefore || !inspectedScene))
@@ -412,6 +433,7 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                         heightMeters: automation.heightMeters,
                         completed: phaseChecks.length,
                         previousCheck: phaseChecks.at(-1),
+                        ...(checkExistingPhase && { inspectBeforeEditing: true }),
                         ...(phase
                           ? {
                               phaseNumber: phaseChecks.length + 1,
@@ -457,6 +479,7 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                     )
                   } else {
                     phaseChecks.push(checkpoint.data.result)
+                    checkExistingPhase = false
                     phaseReadAt = -1
                     phaseCheckedAt = -1
                     phaseVerifiedAt = -1
@@ -482,6 +505,15 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                     'Read the current phase and wait for its tool result before making scene changes.',
                   )
                 } else if (
+                  tool.write &&
+                  checkExistingPhase &&
+                  (phaseCheckedAt < 0 || phaseCheckedAt === round)
+                ) {
+                  rawResult = failure(
+                    'resume_inspection_required',
+                    'Inspect the current scene and read the inspection result before resuming edits. Continue only the work that remains.',
+                  )
+                } else if (
                   managedBuild &&
                   automation?.intent === 'repair' &&
                   tool.write &&
@@ -498,6 +530,7 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                     ...(imageConfig ? { imageConfig } : {}),
                   })
                   if (tool.write) {
+                    if (!rawResult.error) checkExistingPhase = false
                     phaseCheckedAt = -1
                     phaseVerifiedAt = -1
                   }

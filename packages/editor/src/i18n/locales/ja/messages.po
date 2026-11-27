@@ -1624,6 +1624,14 @@ msgstr "画像を削除"
 msgid "app.houseAgent.reset"
 msgstr "新規チャット"
 
+# Source-Hash: 64f74f9c40e631a8
+# Review: required
+# English: "Resume build"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.resumeBuild"
+msgstr "建築を再開"
+
 # Source-Hash: d88f5c752733ec4c
 # Review: required
 # English: "Interiors"

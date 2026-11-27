@@ -772,6 +772,10 @@ msgstr "Remove image"
 msgid "app.houseAgent.reset"
 msgstr "New chat"
 
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.resumeBuild"
+msgstr "Resume build"
+
 #: apps/editor/components/house-agent-architect-popover.tsx
 msgid "app.houseAgent.scope.interiors"
 msgstr "Interiors"

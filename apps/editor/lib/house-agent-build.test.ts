@@ -1,9 +1,10 @@
 import { expect, mock, test } from 'bun:test'
 import { useScene } from '@pascal-app/core'
 import { executeHouseAgentTool } from './house-agent-executor'
-import { runHouseAgent } from './house-agent-runner'
+import { type HousePlanProgress, HousePlanSchema } from './house-agent-protocol'
+import { type HouseAgentRunOptions, runHouseAgent } from './house-agent-runner'
 
-test('a single brief can build and check an editable house without loading the asset catalog', async () => {
+test('an interrupted build resumes from its last checkpoint and still supports focused repair', async () => {
   const previousScene = useScene.getState()
   const previousHistory = useScene.temporal.getState()
   const previousFetch = globalThis.fetch
@@ -126,6 +127,8 @@ test('a single brief can build and check an editable house without loading the a
     [{ name: 'read_house_plan', input: {} }],
     [{ name: 'create_roof', input: {} }],
     [{ name: 'get_level_summary', input: {} }],
+    [{ name: 'create_roof', input: {} }],
+    [{ name: 'get_level_summary', input: {} }],
     [{ name: 'complete_house_phase', input: { phaseNumber: 2, result: 'Roof level present' } }],
     [{ name: 'read_house_plan', input: {} }],
     [{ name: 'get_level_summary', input: {} }],
@@ -136,15 +139,21 @@ test('a single brief can build and check an editable house without loading the a
   ]
 
   try {
-    const result = await runHouseAgent({
-      messages: [
-        { role: 'user', content: '建一栋带客厅、卧室和屋顶的单层小房子，房间保持无家具。' },
-      ],
+    const checkpoint: { progress?: HousePlanProgress } = {}
+    const interruptionRound = batches.findIndex((batch) => batch[0]?.name === 'create_roof')
+    let interruptedOnce = false
+    const options = {
       mode: 'build',
       managedBuild: true,
       maxRounds: 32,
-      signal: new AbortController().signal,
+      onPhase: (progress) => {
+        checkpoint.progress = progress
+      },
       request: async () => {
+        if (round === interruptionRound && !interruptedOnce) {
+          interruptedOnce = true
+          throw new Error('Temporary model connection loss')
+        }
         const batch = batches[round++]
         return batch
           ? {
@@ -167,10 +176,31 @@ test('a single brief can build and check an editable house without loading the a
         if (name === 'add_level' && typeof output.levelId === 'string') levelId = output.levelId
         return output
       },
+    } satisfies Omit<HouseAgentRunOptions, 'messages' | 'signal'>
+    const interrupted = await runHouseAgent({
+      ...options,
+      signal: new AbortController().signal,
+      messages: [
+        { role: 'user', content: '建一栋带客厅、卧室和屋顶的单层小房子，房间保持无家具。' },
+      ],
+    })
+    expect(interrupted.status).toBe('error')
+    expect(interrupted.planSubmitted).toBe(true)
+    expect(checkpoint.progress?.completed).toBe(1)
+    if (!checkpoint.progress) throw new Error('Expected the layout checkpoint')
+    const result = await runHouseAgent({
+      ...options,
+      signal: new AbortController().signal,
+      messages: [...interrupted.messages, { role: 'user', content: 'Continue the saved build' }],
+      resume: {
+        plan: HousePlanSchema.parse(plan),
+        progress: checkpoint.progress,
+        wroteScene: Boolean(interrupted.wroteScene),
+      },
     })
     expect(result.status).toBe('completed')
     expect(result.wroteScene).toBe(true)
-    expect(result.planSubmitted).toBe(true)
+    expect(result.planSubmitted).toBe(false)
     expect(
       result.messages
         .flatMap((message) => (message.role === 'tool' ? [JSON.parse(message.content).code] : []))
@@ -182,15 +212,21 @@ test('a single brief can build and check an editable house without loading the a
       'plan_phase_required',
       'phase_not_checked',
       'plan_phase_required',
+      'resume_inspection_required',
     ])
     const nextPhase = result.messages
       .flatMap((message) => (message.role === 'tool' ? [JSON.parse(message.content)] : []))
       .find((reply) => reply.phase?.stage === 'structure')
-    expect(nextPhase).toMatchObject({ phaseNumber: 2, previousCheck: 'Both room zones present' })
+    expect(nextPhase).toMatchObject({
+      phaseNumber: 2,
+      previousCheck: 'Both room zones present',
+      inspectBeforeEditing: true,
+    })
     expect(operations).toEqual([
       'add_level',
       'create_room',
       'create_room',
+      'get_level_summary',
       'get_level_summary',
       'create_roof',
       'get_level_summary',

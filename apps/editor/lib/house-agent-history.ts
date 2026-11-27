@@ -24,6 +24,7 @@ export const ChatRecordSchema = z.object({
   plan: HousePlanSchema.nullable(),
   planProgress: HousePlanProgressSchema.optional(),
   planPending: z.boolean().optional(),
+  resumeWroteScene: z.boolean().optional(),
 })
 export type ChatRecord = z.infer<typeof ChatRecordSchema>
 function openHistory(): Promise<IDBDatabase> {
