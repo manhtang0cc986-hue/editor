@@ -39,6 +39,19 @@ cp .env.example .env
 
 Local development and the official hosted editor work without any environment variables.
 
+### Custom 3D models
+
+Open **Items → My models** to upload a self-contained GLB (up to 32 MB), preview it,
+set its width in metres, and save it for reuse in any project on this server.
+The other dimensions scale proportionally. The **Place** button activates the
+editor's normal item placement tool.
+
+To generate models with Meshy, add `MESHY_API_KEY=your-key` to the repository's
+`.env.local` and reopen the panel. Restart the server after replacing a key
+that was already loaded. Enter a text prompt or choose a PNG, JPEG or WebP
+reference image (up to 5 MB). Text generation uses Meshy's preview and
+texturing stages. Meshy may charge credits when a generation task is submitted.
+
 ## Self-hosting
 
 The editor ships as one container, `ghcr.io/pascalorg/pascal-editor`, tagged with

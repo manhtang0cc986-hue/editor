@@ -3,6 +3,7 @@
 import { MATERIAL_CATALOG, type MaterialCatalogItem } from '@pascal-app/core'
 import { CATALOG_ITEMS } from '@pascal-app/editor'
 import type { LocalCatalogManifest } from '@/app/api/house-agent/catalog/route'
+import { MODEL_ASSETS_URL } from './model-assets'
 
 export type CatalogItem = (typeof CATALOG_ITEMS)[number]
 
@@ -40,8 +41,13 @@ export function applyLocalCatalogManifest(
 }
 
 export async function getLocalAwareCatalog(): Promise<CatalogItem[]> {
-  const manifest = await loadLocalCatalogManifest()
-  return applyLocalCatalogManifest(CATALOG_ITEMS, manifest)
+  const [manifest, custom] = await Promise.all([
+    loadLocalCatalogManifest(),
+    fetch(MODEL_ASSETS_URL, { signal: AbortSignal.timeout(5000) })
+      .then(async (response) => (response.ok ? ((await response.json()) as CatalogItem[]) : []))
+      .catch(() => []),
+  ])
+  return [...applyLocalCatalogManifest(CATALOG_ITEMS, manifest), ...custom]
 }
 
 export function resolveMaterialPreviewPath(

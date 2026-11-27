@@ -7,7 +7,6 @@ import { type MessageDescriptor, usePascalI18n } from '@pascal-app/core'
 import {
   applySceneGraphToEditor,
   Editor,
-  ItemsPanel,
   type SceneGraph,
   type SidebarTab,
 } from '@pascal-app/editor'
@@ -29,6 +28,7 @@ import { useThumbnailAutosave } from '@/lib/use-thumbnail-autosave'
 import { BuildTab } from './build-tab'
 import { EditorNavbar } from './editor-navbar'
 import { KitchenCommands } from './kitchen-browser'
+import { ModelAssetsPanel } from './model-assets-panel'
 import { PaintPanel } from './paint-panel'
 import { EditorViewerToolbarLeft, EditorViewerToolbarRight } from './viewer-toolbar'
 import { useWebXRFeature, useWebXRInstalled, WebXRFeatureRuntime } from './webxr-feature-gate'
@@ -49,13 +49,6 @@ export interface SceneMeta {
   ownerId: string | null
   sizeBytes: number
   nodeCount: number
-}
-
-// The open-source editor only ships the built-in catalog (no uploaded items),
-// so the item source chips and tag filters add nothing — drop them and keep
-// the panel to plain categories.
-function EditorItemsPanel() {
-  return <ItemsPanel showSourceFilter={false} showTagFilters={false} />
 }
 
 const SIDEBAR_TABS: (Omit<SidebarTab, 'label'> & {
@@ -113,7 +106,7 @@ const SIDEBAR_TABS: (Omit<SidebarTab, 'label'> & {
   {
     id: 'items',
     label: /* i18n */ { id: 'app.sceneLoader.items', message: 'Items' },
-    component: EditorItemsPanel,
+    component: ModelAssetsPanel,
     mobileDefaultSnap: 0.5,
     mobileIcon: <Package className="h-5 w-5" />,
     icon: (
