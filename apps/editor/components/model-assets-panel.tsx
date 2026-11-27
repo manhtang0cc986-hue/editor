@@ -106,7 +106,7 @@ export function ModelAssetsPanel() {
 function PersonalModels() {
   const i18n = usePascalI18n()
   const [assets, setAssets] = useState<AssetInput[]>([])
-  const [configured, setConfigured] = useState(false)
+  const [configured, setConfigured] = useState<boolean | null>(null)
   const [prompt, setPrompt] = useState('')
   const [reference, setReference] = useState<File | null>(null)
   const [upload, setUpload] = useState<Blob | null>(null)
@@ -133,6 +133,16 @@ function PersonalModels() {
     }
   }, [])
 
+  const checkConfiguration = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const response = await assertOk(await fetch(MODEL_GENERATION_URL, { signal }))
+      const result = await response.json()
+      if (!signal?.aborted) setConfigured(result.configured === true)
+    } catch (error) {
+      if (!signal?.aborted) setError(error instanceof Error ? error.message : String(error))
+    }
+  }, [])
+
   useEffect(() => {
     const controller = new AbortController()
     void fetch(MODEL_ASSETS_URL, { signal: controller.signal })
@@ -142,18 +152,12 @@ function PersonalModels() {
       .catch((error) => {
         if (!controller.signal.aborted) setError(String(error))
       })
-    void fetch(MODEL_GENERATION_URL, { signal: controller.signal })
-      .then(assertOk)
-      .then((response) => response.json())
-      .then((result) => setConfigured(result.configured === true))
-      .catch((error) => {
-        if (!controller.signal.aborted) setError(String(error))
-      })
+    void checkConfiguration(controller.signal)
     return () => {
       controller.abort()
       startRequest.current?.abort()
     }
-  }, [])
+  }, [checkConfiguration])
 
   useEffect(() => {
     if (!upload) return
@@ -215,7 +219,7 @@ function PersonalModels() {
   }, [job, paused, rememberJob])
 
   async function startGeneration() {
-    if (job || startRequest.current) return
+    if (!configured || job || startRequest.current) return
     const controller = new AbortController()
     startRequest.current = controller
     setBusy(true)
@@ -311,64 +315,90 @@ function PersonalModels() {
 
   return (
     <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 text-sm">
-      <label className="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border px-2 py-1.5 hover:bg-accent">
-        <Upload size={15} />
-        {i18n._({ id: 'app.modelAssets.upload', message: 'Upload GLB' })}
-        <input
-          type="file"
-          className="sr-only"
-          accept=".glb,model/gltf-binary"
-          disabled={busy || generating || Boolean(upload)}
-          onChange={(event) => {
-            const file = event.currentTarget.files?.[0]
-            event.currentTarget.value = ''
-            if (file) void selectUpload(file)
-          }}
-        />
-      </label>
       <div className="space-y-2 rounded-lg border border-border p-2.5">
         <h3 className="flex items-center gap-2 font-medium">
           <Sparkles size={15} /> Meshy
         </h3>
-        {configured ? (
-          <>
-            <label className="block">
-              {i18n._({ id: 'app.modelAssets.prompt', message: 'Describe a 3D model' })}
-              <textarea
-                className={input}
-                rows={2}
-                maxLength={500}
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                disabled={generating || busy || Boolean(reference)}
-              />
-            </label>
-            <label className="block">
-              {i18n._({ id: 'app.modelAssets.reference', message: 'Or choose a reference image' })}
-              <input
-                type="file"
-                className="block w-full text-xs"
-                accept="image/png,image/jpeg,image/webp"
-                disabled={generating || busy}
-                onChange={(event) => setReference(event.currentTarget.files?.[0] ?? null)}
-              />
-            </label>
+        <label className="block">
+          {i18n._({ id: 'app.modelAssets.reference', message: 'Or choose a reference image' })}
+          <input
+            type="file"
+            className="block w-full text-xs"
+            accept="image/png,image/jpeg,image/webp"
+            disabled={generating || busy}
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0]
+              event.currentTarget.value = ''
+              if (!file) return
+              setError('')
+              if (
+                file.size > MAX_REFERENCE_BYTES ||
+                !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
+              ) {
+                setError('Choose a PNG, JPEG or WebP image smaller than 5 MB.')
+                return
+              }
+              setReference(file)
+            }}
+          />
+        </label>
+        {reference && (
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="truncate">{reference.name}</span>
             <button
               type="button"
               className={button}
-              disabled={busy || generating || Boolean(upload) || (!prompt.trim() && !reference)}
-              onClick={() => void startGeneration()}
+              disabled={generating || busy}
+              onClick={() => setReference(null)}
             >
-              {i18n._({ id: 'app.modelAssets.generate', message: 'Generate 3D model' })}
+              {i18n._({ id: 'app.houseAgent.removeImage', message: 'Remove image' })}
             </button>
-          </>
-        ) : (
-          <p className="text-muted-foreground">
-            {i18n._({
-              id: 'app.modelAssets.configure',
-              message: 'Set MESHY_API_KEY in .env.local to enable generation.',
-            })}
-          </p>
+          </div>
+        )}
+        {!reference && (
+          <label className="block">
+            {i18n._({ id: 'app.modelAssets.prompt', message: 'Describe a 3D model' })}
+            <textarea
+              className={input}
+              rows={2}
+              maxLength={500}
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              disabled={generating || busy}
+            />
+          </label>
+        )}
+        <button
+          type="button"
+          className={button}
+          disabled={
+            !configured || busy || generating || Boolean(upload) || (!prompt.trim() && !reference)
+          }
+          onClick={() => void startGeneration()}
+        >
+          {i18n._({ id: 'app.modelAssets.generate', message: 'Generate 3D model' })}
+        </button>
+        {configured !== true && (
+          <div className="space-y-1">
+            {configured === false && (
+              <p className="text-muted-foreground">
+                {i18n._({
+                  id: 'app.modelAssets.configure',
+                  message: 'Set MESHY_API_KEY in .env.local to enable generation.',
+                })}
+              </p>
+            )}
+            <button
+              type="button"
+              className={button}
+              onClick={() => {
+                setError('')
+                void checkConfiguration()
+              }}
+            >
+              {i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
+            </button>
+          </div>
         )}
         {job && (
           <div className="space-y-1" aria-live="polite">
@@ -393,6 +423,21 @@ function PersonalModels() {
           </div>
         )}
       </div>
+      <label className="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border px-2 py-1.5 hover:bg-accent">
+        <Upload size={15} />
+        {i18n._({ id: 'app.modelAssets.upload', message: 'Upload GLB' })}
+        <input
+          type="file"
+          className="sr-only"
+          accept=".glb,model/gltf-binary"
+          disabled={busy || generating || Boolean(upload)}
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0]
+            event.currentTarget.value = ''
+            if (file) void selectUpload(file)
+          }}
+        />
+      </label>
       {error && (
         <p role="alert" className="text-red-500">
           {error}
@@ -457,6 +502,18 @@ function PersonalModels() {
             }}
           >
             {i18n._({ id: 'app.modelAssets.discard', message: 'Discard preview' })}
+          </button>
+        </div>
+      )}
+      {!upload && savedPreview && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate">{savedPreview.name}</span>
+          <button
+            type="button"
+            className={button}
+            onClick={() => activateCatalogItem(savedPreview)}
+          >
+            {i18n._({ id: 'app.modelAssets.place', message: 'Place' })}
           </button>
         </div>
       )}
