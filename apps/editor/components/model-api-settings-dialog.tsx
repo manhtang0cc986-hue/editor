@@ -10,12 +10,15 @@ import {
   Film,
   Image,
   KeyRound,
+  Layers3,
   LoaderCircle,
   MessageSquare,
   ScanSearch,
+  Search,
+  Server,
   X,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import {
   MODEL_API_CHANGED,
   MODEL_API_URL,
@@ -33,24 +36,27 @@ const field =
 const secondary =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50'
 const primary =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50'
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-(--api-accent) px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-45'
 const targets = [
   {
     id: 'agent',
+    color: 'oklch(0.48 0.22 269)',
     icon: MessageSquare,
     label: { id: 'app.modelApi.agent', message: 'Chat models' },
     usage: { id: 'app.modelApi.agentUsage', message: 'Chat and editable 3D house modeling.' },
   },
   {
     id: 'image',
+    color: 'oklch(0.48 0.23 313)',
     icon: Image,
-    label: { id: 'app.modelApi.image', message: 'Image models' },
+    label: { id: 'app.modelApi.imageGeneration', message: 'Image generation' },
     usage: { id: 'app.modelApi.imageUsage', message: 'Design renders and reference images.' },
   },
   {
     id: 'video',
+    color: 'oklch(0.44 0.12 203)',
     icon: Film,
-    label: { id: 'app.modelApi.video', message: 'Video models' },
+    label: { id: 'app.modelApi.videoGeneration', message: 'Video generation' },
     usage: {
       id: 'app.modelApi.videoUsage',
       message:
@@ -59,6 +65,7 @@ const targets = [
   },
   {
     id: 'mesh',
+    color: 'oklch(0.46 0.15 157)',
     icon: Box,
     label: { id: 'app.modelApi.mesh', message: '3D models' },
     usage: { id: 'app.modelApi.meshUsage', message: 'Meshy text and image to 3D in My models.' },
@@ -86,9 +93,15 @@ export function ModelApiSettingsDialog() {
   const [saved, setSaved] = useState(false)
   const [probe, setProbe] = useState<ModelApiProbe | null>(null)
   const [showModels, setShowModels] = useState(false)
+  const [search, setSearch] = useState('')
   const settings = { ...(snapshot?.[target] ?? blank), ...drafts[target] }
   const selection = targets.find((item) => item.id === target)!
   const TargetIcon = selection.icon
+  const filteredModels =
+    probe?.models.filter(({ id, owner }) => {
+      const query = search.trim().toLowerCase()
+      return id.toLowerCase().includes(query) || owner?.toLowerCase().includes(query)
+    }) ?? []
   const canRequest = Boolean(
     (target === 'mesh' || settings.baseUrl?.trim()) && (settings.apiKey?.trim() || settings.hasKey),
   )
@@ -130,6 +143,7 @@ export function ModelApiSettingsDialog() {
     const abort = new AbortController()
     activeRequest.current = abort
     setPending(action)
+    setSearch('')
     setSaved(false)
     setError('')
     setProbe(null)
@@ -191,7 +205,7 @@ export function ModelApiSettingsDialog() {
       <dialog
         ref={dialog}
         aria-labelledby="model-api-title"
-        className="m-auto max-h-[92dvh] w-[min(55rem,calc(100%-1.5rem))] max-w-none overflow-auto rounded-[1.5rem] border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-black/65 backdrop:backdrop-blur-sm"
+        className="m-auto max-h-[92dvh] w-[min(66rem,calc(100%-1.5rem))] max-w-none overflow-auto rounded-[1.5rem] border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-black/65 backdrop:backdrop-blur-sm"
         onClose={() => {
           setOpen(false)
           activeRequest.current?.abort()
@@ -224,15 +238,16 @@ export function ModelApiSettingsDialog() {
             <X size={19} />
           </button>
         </header>
-        <div className="grid gap-0 sm:grid-cols-[13rem_minmax(0,1fr)]">
+        <div className="grid gap-0 sm:grid-cols-[11rem_minmax(0,1fr)] lg:grid-cols-[13rem_minmax(0,1fr)]">
           <nav
             aria-label={i18n._({ id: 'app.modelApi.categories', message: 'Model categories' })}
             className="grid grid-cols-2 content-start gap-1.5 border-border border-b bg-muted/25 p-3 sm:grid-cols-1 sm:border-r sm:border-b-0"
           >
-            {targets.map(({ id, icon: Icon, label }) => (
+            {targets.map(({ id, icon: Icon, label, color }) => (
               <button
                 key={id}
                 type="button"
+                style={{ '--api-nav-accent': color } as CSSProperties}
                 aria-pressed={target === id}
                 disabled={pending !== null}
                 onClick={() => {
@@ -241,9 +256,9 @@ export function ModelApiSettingsDialog() {
                   setSaved(false)
                   setError('')
                 }}
-                className="group flex min-w-0 items-center gap-2 rounded-xl border border-transparent px-2.5 py-2 text-left text-sm text-muted-foreground hover:bg-background aria-pressed:border-indigo-500/25 aria-pressed:bg-indigo-500/10 aria-pressed:text-foreground"
+                className="group flex min-w-0 items-center gap-2 rounded-xl border border-transparent px-2.5 py-2 text-left text-sm text-muted-foreground hover:bg-background aria-pressed:border-[color:color-mix(in_oklab,var(--api-nav-accent),transparent_65%)] aria-pressed:bg-[color:color-mix(in_oklab,var(--api-nav-accent),transparent_85%)] aria-pressed:text-foreground"
               >
-                <Icon size={16} className="shrink-0 group-aria-pressed:text-indigo-500" />
+                <Icon size={16} className="shrink-0 group-aria-pressed:text-foreground" />
                 <span className="min-w-0 flex-1">{i18n._(label)}</span>
                 {snapshot?.[id].hasKey && (
                   <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
@@ -253,194 +268,288 @@ export function ModelApiSettingsDialog() {
             ))}
           </nav>
           <form
-            className="min-w-0 space-y-4 p-4 sm:p-6"
+            className="min-w-0 space-y-4 p-4 sm:p-5"
+            style={{ '--api-accent': selection.color } as CSSProperties}
             onSubmit={(event) => {
               event.preventDefault()
               void submit('save')
             }}
           >
-            <div className="flex gap-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-indigo-500/10 text-indigo-500">
-                <TargetIcon size={18} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-base">{i18n._(selection.label)}</h3>
-                <p className="mt-0.5 text-muted-foreground text-xs">{i18n._(selection.usage)}</p>
+            <section
+              aria-labelledby="model-api-category"
+              className="relative isolate overflow-hidden rounded-2xl border border-border px-4 py-5 sm:px-5"
+              style={{
+                background:
+                  'linear-gradient(125deg, color-mix(in oklab, var(--api-accent), transparent 78%), transparent 82%)',
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-36 items-center justify-center sm:flex"
+                aria-hidden="true"
+              >
+                <span className="absolute size-24 rotate-12 rounded-3xl border border-foreground/10" />
+                <span className="absolute size-20 -rotate-12 rounded-3xl border border-foreground/15 bg-background/25" />
+                <TargetIcon className="text-foreground/25" size={34} strokeWidth={1.25} />
               </div>
-              <span className="h-fit shrink-0 rounded-full border border-border px-2 py-1 text-muted-foreground text-[11px]">
-                {status}
-              </span>
-            </div>
-            <fieldset disabled={pending !== null} className="min-w-0 space-y-3 disabled:opacity-70">
-              <label className="block space-y-1.5 text-xs font-medium">
-                <span>
-                  {i18n._({ id: 'app.houseAgent.settings.baseUrl', message: 'API Base URL' })}
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-(--api-accent) text-white shadow-sm">
+                  <TargetIcon size={19} />
                 </span>
-                <input
-                  className={field}
-                  placeholder="https://api.example.com/v1"
-                  readOnly={target === 'mesh'}
-                  value={settings.baseUrl}
-                  onChange={(event) => edit({ baseUrl: event.target.value })}
-                />
-              </label>
-              <label className="block space-y-1.5 text-xs font-medium">
-                <span>{i18n._({ id: 'app.modelApi.key', message: 'API Key' })}</span>
-                <input
-                  className={field}
-                  type="password"
-                  autoComplete="off"
-                  placeholder={settings.hasKey ? '••••••••••••' : undefined}
-                  value={settings.apiKey ?? ''}
-                  onChange={(event) => edit({ apiKey: event.target.value })}
-                />
-              </label>
-              {target !== 'mesh' && (
-                <label className="block space-y-1.5 text-xs font-medium">
-                  <span>{i18n._({ id: 'app.houseAgent.settings.model', message: 'Model' })}</span>
-                  <span className="relative block">
-                    <input
-                      className={`${field} pr-10`}
-                      value={settings.model}
-                      onChange={(event) => edit({ model: event.target.value })}
-                    />
-                    {settings.model && (
-                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                        <HouseAgentModelLogo modelId={settings.model} compact />
-                      </span>
-                    )}
-                  </span>
-                </label>
-              )}
-              {target === 'image' && (
-                <label className="block space-y-1.5 text-xs font-medium">
-                  <span>
-                    {i18n._({ id: 'app.houseAgent.imageSettings.mode', message: 'API Mode' })}
-                  </span>
-                  <select
-                    className={field}
-                    value={settings.imageMode ?? 'auto'}
-                    onChange={(event) =>
-                      edit({ imageMode: event.target.value as ModelApiSettings['imageMode'] })
-                    }
-                  >
-                    <option value="auto">
-                      {i18n._({ id: 'app.houseAgent.imageSettings.mode.auto', message: 'Auto' })}
-                    </option>
-                    <option value="images">Images API</option>
-                    <option value="chat">Chat Completions</option>
-                  </select>
-                </label>
-              )}
-            </fieldset>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={secondary}
-                disabled={pending !== null || !canRequest}
-                onClick={() => void submit('discover')}
-              >
-                <ScanSearch size={15} />
-                {target === 'mesh'
-                  ? i18n._({ id: 'app.modelApi.workflow', message: 'Check capabilities' })
-                  : i18n._({ id: 'app.houseAgent.settings.detect', message: 'Detect' })}
-              </button>
-              <button
-                type="button"
-                className={secondary}
-                disabled={pending !== null || !canRequest}
-                onClick={() => void submit('test')}
-              >
-                <Activity size={15} />
-                {i18n._({ id: 'app.modelApi.test', message: 'Test request' })}
-              </button>
-              <button
-                type="submit"
-                className={`${primary} sm:ml-auto`}
-                disabled={pending !== null || !canRequest}
-              >
-                <Check size={15} />
-                {i18n._({ id: 'app.modelApi.save', message: 'Save configuration' })}
-              </button>
-            </div>
-            {pending && (
-              <p role="status" className="flex items-center gap-2 text-muted-foreground text-xs">
-                <LoaderCircle size={14} className="animate-spin" />
-                {i18n._({ id: 'app.modelApi.loading', message: 'Waiting for response…' })}
+                <h3
+                  id="model-api-category"
+                  className="min-w-0 font-semibold text-lg tracking-tight sm:text-xl"
+                >
+                  {i18n._(selection.label)}
+                </h3>
+                <span className="ml-auto inline-flex h-fit shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/80 px-2 py-1 font-medium text-muted-foreground text-[11px] sm:mr-28">
+                  <span
+                    className={`size-1.5 rounded-full ${settings.hasKey ? 'bg-emerald-500' : 'bg-amber-400'}`}
+                  />
+                  {status}
+                </span>
+              </div>
+              <p className="mt-3 max-w-96 text-muted-foreground text-xs leading-relaxed sm:pr-4">
+                {i18n._(selection.usage)}
               </p>
-            )}
-            {error && (
-              <p
-                role="alert"
-                className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm"
-              >
-                {error}
-              </p>
-            )}
-            {saved && (
-              <p
-                role="status"
-                className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-3 text-sm"
-              >
-                {i18n._({ id: 'app.modelApi.saved', message: 'Saved to server environment.' })}
-              </p>
-            )}
-            {probe && (
-              <div className="space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3">
-                <p role="status" className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                  <Check size={15} className="text-emerald-500" /> HTTP {probe.status}
-                  <span className="text-xs text-muted-foreground">{probe.durationMs} ms</span>
-                  {probe.credits !== undefined && (
-                    <span className="text-xs text-muted-foreground">
-                      {i18n._({
-                        id: 'app.modelApi.credits',
-                        message: '{credits} Meshy credits',
-                        values: { credits: probe.credits },
-                      })}
+            </section>
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+              <section className="min-w-0 space-y-4 rounded-2xl border border-border bg-card p-3.5">
+                <h4 className="flex items-center gap-2 font-semibold text-sm">
+                  <Server size={15} className="text-muted-foreground" />
+                  {i18n._({ id: 'app.modelApi.connection', message: 'Connection' })}
+                </h4>
+                <fieldset
+                  disabled={pending !== null}
+                  className="min-w-0 space-y-3 disabled:opacity-70"
+                >
+                  <label className="block space-y-1.5 text-xs font-medium">
+                    <span>
+                      {i18n._({ id: 'app.houseAgent.settings.baseUrl', message: 'API Base URL' })}
                     </span>
+                    <input
+                      className={field}
+                      placeholder="https://api.example.com/v1"
+                      readOnly={target === 'mesh'}
+                      value={settings.baseUrl}
+                      onChange={(event) => edit({ baseUrl: event.target.value })}
+                    />
+                  </label>
+                  <label className="block space-y-1.5 text-xs font-medium">
+                    <span>{i18n._({ id: 'app.modelApi.key', message: 'API Key' })}</span>
+                    <input
+                      className={field}
+                      type="password"
+                      autoComplete="off"
+                      placeholder={settings.hasKey ? '••••••••••••' : undefined}
+                      value={settings.apiKey ?? ''}
+                      onChange={(event) => edit({ apiKey: event.target.value })}
+                    />
+                  </label>
+                  {target !== 'mesh' && (
+                    <label className="block space-y-1.5 text-xs font-medium">
+                      <span>
+                        {i18n._({ id: 'app.houseAgent.settings.model', message: 'Model' })}
+                      </span>
+                      <span className="relative block">
+                        <input
+                          className={`${field} pr-10`}
+                          value={settings.model}
+                          onChange={(event) => edit({ model: event.target.value })}
+                        />
+                        {settings.model && (
+                          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                            <HouseAgentModelLogo modelId={settings.model} compact />
+                          </span>
+                        )}
+                      </span>
+                    </label>
                   )}
-                </p>
-                {target === 'mesh' && showModels && (
-                  <p className="text-xs text-muted-foreground">{i18n._(selection.usage)}</p>
-                )}
-                {target !== 'mesh' && !showModels && probe.selectedModelListed === false && (
-                  <p className="text-xs text-muted-foreground">
-                    {i18n._({
-                      id: 'app.modelApi.modelNotListed',
-                      message:
-                        'The request succeeded. The selected model is not in the returned catalog.',
-                    })}
+                  {target === 'image' && (
+                    <label className="block space-y-1.5 text-xs font-medium">
+                      <span>
+                        {i18n._({ id: 'app.houseAgent.imageSettings.mode', message: 'API Mode' })}
+                      </span>
+                      <select
+                        className={field}
+                        value={settings.imageMode ?? 'auto'}
+                        onChange={(event) =>
+                          edit({ imageMode: event.target.value as ModelApiSettings['imageMode'] })
+                        }
+                      >
+                        <option value="auto">
+                          {i18n._({
+                            id: 'app.houseAgent.imageSettings.mode.auto',
+                            message: 'Auto',
+                          })}
+                        </option>
+                        <option value="images">Images API</option>
+                        <option value="chat">Chat Completions</option>
+                      </select>
+                    </label>
+                  )}
+                </fieldset>
+                <button
+                  type="submit"
+                  className={`${primary} w-full`}
+                  disabled={pending !== null || !canRequest}
+                >
+                  <Check size={15} />
+                  {i18n._({ id: 'app.modelApi.save', message: 'Save configuration' })}
+                </button>
+              </section>
+              <section className="min-w-0 space-y-3 rounded-2xl border border-border bg-muted/20 p-3.5">
+                <h4 className="flex items-center gap-2 font-semibold text-sm">
+                  <Activity size={15} className="text-muted-foreground" />
+                  {i18n._({
+                    id: 'app.modelApi.diagnostics',
+                    message: 'Model discovery and testing',
+                  })}
+                </h4>
+                <div className="grid gap-2 min-[400px]:grid-cols-2">
+                  <button
+                    type="button"
+                    className={secondary}
+                    disabled={pending !== null || !canRequest}
+                    onClick={() => void submit('discover')}
+                  >
+                    <ScanSearch size={15} />
+                    {target === 'mesh'
+                      ? i18n._({ id: 'app.modelApi.workflow', message: 'Check capabilities' })
+                      : i18n._({ id: 'app.houseAgent.settings.detect', message: 'Detect' })}
+                  </button>
+                  <button
+                    type="button"
+                    className={secondary}
+                    disabled={pending !== null || !canRequest}
+                    onClick={() => void submit('test')}
+                  >
+                    <Activity size={15} />
+                    {i18n._({ id: 'app.modelApi.test', message: 'Test request' })}
+                  </button>
+                </div>
+                {!probe && !pending && !error && !saved && (
+                  <p className="flex gap-2 rounded-xl border border-border bg-background/60 p-2.5 text-muted-foreground text-xs leading-relaxed">
+                    <Layers3 size={14} className="mt-0.5 shrink-0" />
+                    {target === 'mesh'
+                      ? i18n._({
+                          id: 'app.modelApi.meshDiagnosticHint',
+                          message: 'Verifies your Meshy key and remaining credits.',
+                        })
+                      : i18n._({
+                          id: 'app.modelApi.diagnosticHint',
+                          message: 'Find model IDs or test the provider with a read-only request.',
+                        })}
                   </p>
                 )}
-                {showModels && target !== 'mesh' && (
-                  <div className="max-h-40 space-y-1 overflow-y-auto">
-                    {probe.models.length === 0 && (
+                {pending && (
+                  <p
+                    role="status"
+                    className="flex items-center gap-2 text-muted-foreground text-xs"
+                  >
+                    <LoaderCircle size={14} className="animate-spin" />
+                    {i18n._({ id: 'app.modelApi.loading', message: 'Waiting for response…' })}
+                  </p>
+                )}
+                {error && (
+                  <p
+                    role="alert"
+                    className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm"
+                  >
+                    {error}
+                  </p>
+                )}
+                {saved && (
+                  <p
+                    role="status"
+                    className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-3 text-sm"
+                  >
+                    {i18n._({ id: 'app.modelApi.saved', message: 'Saved to server environment.' })}
+                  </p>
+                )}
+                {probe && (
+                  <div className="space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3">
+                    <p
+                      role="status"
+                      className="flex flex-wrap items-center gap-2 text-sm font-medium"
+                    >
+                      <Check size={15} className="text-emerald-500" /> HTTP {probe.status}
+                      <span className="text-xs text-muted-foreground">{probe.durationMs} ms</span>
+                      {probe.credits !== undefined && (
+                        <span className="text-xs text-muted-foreground">
+                          {i18n._({
+                            id: 'app.modelApi.credits',
+                            message: '{credits} Meshy credits',
+                            values: { credits: probe.credits },
+                          })}
+                        </span>
+                      )}
+                    </p>
+                    {target === 'mesh' && showModels && (
+                      <p className="text-xs text-muted-foreground">{i18n._(selection.usage)}</p>
+                    )}
+                    {target !== 'mesh' && !showModels && probe.selectedModelListed === false && (
                       <p className="text-xs text-muted-foreground">
                         {i18n._({
-                          id: 'app.modelApi.noModels',
-                          message: 'No models were returned for this category.',
+                          id: 'app.modelApi.modelNotListed',
+                          message:
+                            'The request succeeded. The selected model is not in the returned catalog.',
                         })}
                       </p>
                     )}
-                    {probe.models.map((model) => (
-                      <button
-                        type="button"
-                        key={model.id}
-                        aria-pressed={settings.model === model.id}
-                        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-accent aria-pressed:bg-indigo-500/10"
-                        onClick={() => edit({ model: model.id })}
-                      >
-                        <HouseAgentModelLogo modelId={model.id} owner={model.owner} compact />
-                        <span className="min-w-0 flex-1 break-all">{model.id}</span>
-                        {settings.model === model.id && (
-                          <Check size={13} className="shrink-0 text-indigo-500" />
+                    {showModels && target !== 'mesh' && (
+                      <div className="max-h-40 space-y-1 overflow-y-auto">
+                        {probe.models.length > 4 && (
+                          <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1.5 text-xs">
+                            <Search size={13} className="shrink-0 text-muted-foreground" />
+                            <input
+                              className="min-w-0 w-full bg-transparent outline-none"
+                              aria-label={i18n._({
+                                id: 'app.modelApi.searchModels',
+                                message: 'Search models',
+                              })}
+                              placeholder={i18n._({
+                                id: 'app.modelApi.searchModels',
+                                message: 'Search models',
+                              })}
+                              value={search}
+                              onChange={(event) => setSearch(event.target.value)}
+                            />
+                          </label>
                         )}
-                      </button>
-                    ))}
+                        {filteredModels.length === 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {probe.models.length === 0
+                              ? i18n._({
+                                  id: 'app.modelApi.noModels',
+                                  message: 'No models were returned for this category.',
+                                })
+                              : i18n._({
+                                  id: 'app.modelApi.noModelMatches',
+                                  message: 'No models match your search.',
+                                })}
+                          </p>
+                        )}
+                        {filteredModels.map((model) => (
+                          <button
+                            type="button"
+                            key={model.id}
+                            aria-pressed={settings.model === model.id}
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-accent aria-pressed:bg-indigo-500/10"
+                            onClick={() => edit({ model: model.id })}
+                          >
+                            <HouseAgentModelLogo modelId={model.id} owner={model.owner} compact />
+                            <span className="min-w-0 flex-1 break-all">{model.id}</span>
+                            {settings.model === model.id && (
+                              <Check size={13} className="shrink-0 text-indigo-500" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
+              </section>
+            </div>
           </form>
         </div>
       </dialog>
