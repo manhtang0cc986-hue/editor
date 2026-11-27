@@ -152,7 +152,7 @@ test('sends the chosen build scope and provider reasoning effort independently',
   )
 })
 
-test('a direct house brief uses the structure workflow without requiring plan approval', async () => {
+test('a direct house brief defaults to the complete workflow without requiring plan approval', async () => {
   const brief = '建一栋带两个卧室的小房子。'
   await agentStep(
     [{ role: 'user', content: brief }],
@@ -164,7 +164,7 @@ test('a direct house brief uses the structure workflow without requiring plan ap
       expect(body.messages[0].content).toContain('call add_level first')
       expect(body.messages[0].content).toContain('Group independent rooms')
       expect(body.messages[0].content).toContain('Verify with verify_scene after the last edit')
-      expect(body.messages[0].content).toContain('building envelope')
+      expect(body.messages[0].content).toContain('furnishing, room materials, and finishes')
       expect(body.messages[1].content).toBe(brief)
       expect(
         body.tools.map(({ function: { name } }: { function: { name: string } }) => name),

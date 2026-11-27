@@ -1543,6 +1543,14 @@ msgstr "解析してプラン作成"
 msgid "app.houseAgent.plan.dimensionsTitle"
 msgstr "寸法の根拠"
 
+# English: "Floors and furniture"
+# Source-Hash: 4fc009cc8769e83e
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.furnitureByLevel"
+msgstr "階と家具"
+
 # Source-Hash: 86c3cbadef39070d
 # Review: required
 # English: "openings"
@@ -1566,6 +1574,22 @@ msgstr "確認事項"
 #, fuzzy
 msgid "app.houseAgent.plan.readyHint"
 msgstr "必要な寸法が確認でき、構築できる状態です。"
+
+# English: "Repair plan"
+# Source-Hash: b0a7f191c38b6160
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.repairAfter"
+msgstr "修正計画"
+
+# English: "Before repair"
+# Source-Hash: d968ae25559b2824
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.repairBefore"
+msgstr "修正前"
 
 # Source-Hash: 59f5d75b31635487
 # Review: required

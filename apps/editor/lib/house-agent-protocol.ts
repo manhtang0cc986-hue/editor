@@ -160,7 +160,45 @@ export const HousePlanRoomSchema = z.object({
   assetIds: z.array(z.string().max(80)).max(32).optional(),
 })
 
+export const HouseAutomationSchema = z.object({
+  intent: z.enum(['build', 'repair']),
+  buildingType: z.string().trim().min(1).max(100),
+  widthMeters: z.number().positive(),
+  depthMeters: z.number().positive(),
+  heightMeters: z.number().positive(),
+  levels: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(80),
+        heightMeters: z.number().positive(),
+        furniture: z.array(z.string().min(1).max(160)).max(40),
+      }),
+    )
+    .min(1)
+    .max(80),
+  phases: z
+    .array(
+      z.object({
+        title: z.string().min(1).max(120),
+        level: z.string().min(1).max(80),
+        tasks: z.array(z.string().min(1).max(240)).min(1).max(12),
+      }),
+    )
+    .min(1)
+    .max(20),
+  repairBefore: z.string().trim().min(1).max(4000).optional(),
+})
+
+export const HousePlanProgressSchema = z.object({
+  completed: z.number().int().nonnegative(),
+  total: z.number().int().positive(),
+  checks: z.array(z.string().max(600)).max(20),
+})
+
+export type HousePlanProgress = z.infer<typeof HousePlanProgressSchema>
+
 export const HousePlanSchema = z.object({
+  automation: HouseAutomationSchema.optional(),
   title: z.string().min(1).max(140),
   summary: z.string().min(1).max(1000),
   scaleAndUnits: z.object({

@@ -1,9 +1,12 @@
-import type {
-  AgentMessage,
-  AgentMode,
-  AgentStreamEvent,
-  HousePlan,
-  ImageClientConfig,
+import { z } from 'zod'
+import {
+  type AgentMessage,
+  type AgentMode,
+  type AgentStreamEvent,
+  type HousePlan,
+  type HousePlanProgress,
+  HousePlanSchema,
+  type ImageClientConfig,
 } from './house-agent-protocol'
 import { HOUSE_AGENT_TOOLS } from './house-agent-tools'
 
@@ -31,6 +34,8 @@ export type HouseAgentRunOptions = {
   messages: AgentMessage[]
   mode: AgentMode
   signal: AbortSignal
+  managedBuild?: boolean
+  nodeType?: (id: string) => string | undefined
   maxRounds?: number
   maxToolCalls?: number
   request?: (
@@ -53,6 +58,7 @@ export type HouseAgentRunOptions = {
   onMessages?: (messages: AgentMessage[]) => void
   onStream?: (state: HouseAgentStreamState | null) => void
   onTool?: (event: HouseAgentToolEvent) => void
+  onPhase?: (progress: HousePlanProgress) => void
   onPlan?: (plan: HousePlan) => void
 }
 
@@ -76,6 +82,15 @@ const VISION_TOOLS = new Set([
   'view_scene',
   'inspect_scene_guides',
   'generate_design_image',
+])
+const SCENE_INSPECTIONS = new Set([
+  'get_site',
+  'get_node',
+  'get_level_summary',
+  'get_walls',
+  'get_zones',
+  'find_by_type',
+  'verify_scene',
 ])
 const toolsByName = new Map(HOUSE_AGENT_TOOLS.map((entry) => [entry.contract.name, entry]))
 
@@ -131,6 +146,26 @@ function prepareToolResult(
   }
 }
 
+function repairWouldReplaceScene(
+  name: string,
+  args: unknown,
+  nodeType?: (id: string) => string | undefined,
+): boolean {
+  const input = args as { id?: string; calls?: { tool?: string; input?: unknown }[] } | undefined
+  if (name === 'run_batch' && Array.isArray(input?.calls)) {
+    return input.calls.some(
+      (call) =>
+        typeof call?.tool === 'string' &&
+        call.tool !== 'run_batch' &&
+        repairWouldReplaceScene(call.tool, call.input, nodeType),
+    )
+  }
+  if (name === 'place_building') return true
+  if (name !== 'delete_node' || typeof input?.id !== 'string') return false
+  const type = nodeType?.(input.id) ?? input.id.split('_')[0]
+  return type === 'site' || type === 'building' || type === 'level'
+}
+
 export async function runHouseAgent(options: HouseAgentRunOptions): Promise<HouseAgentRunResult> {
   const {
     signal,
@@ -143,12 +178,22 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
     onStream,
     onTool,
     onPlan,
+    onPhase,
+    nodeType,
+    managedBuild = false,
     maxRounds = DEFAULT_MAX_MODEL_ROUNDS,
     maxToolCalls = DEFAULT_MAX_TOOL_CALLS,
   } = options
   const messages = [...options.messages]
   const publish = () => onMessages?.([...messages])
   let planSubmitted = false
+  let activePlan: HousePlan | undefined
+  const phaseChecks: string[] = []
+  let phaseRead = false
+  let phaseChecked = false
+  let inspectedScene = false
+  let promptedToContinue = false
+  let blockedWrite = false
   let wroteScene = false
   let wroteSinceLastVerify = false
   let viewSceneSuccess: boolean | undefined
@@ -231,6 +276,24 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
     messages.push(assistant)
     if (toolCalls.length === 0) {
       publish()
+      if (
+        managedBuild &&
+        (blockedWrite ||
+          (activePlan?.automation &&
+            (!wroteScene || phaseChecks.length < activePlan.automation.phases.length)))
+      ) {
+        if (!promptedToContinue) {
+          promptedToContinue = true
+          messages.push({
+            role: 'user',
+            content:
+              'Continue the current task. Read the saved plan, finish any remaining phases, and verify the scene before reporting completion.',
+          })
+          publish()
+          continue
+        }
+        return finish('error', 'Construction stopped before all planned phases were completed.')
+      }
       return assistant.content?.trim() || assistant.reasoning_content?.trim()
         ? finish('completed')
         : finish('error', 'The model returned an empty response.')
@@ -287,28 +350,146 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
               status = 'skipped'
             } else {
               try {
-                const rawResult = await execute(name, args, {
-                  allowWrites: mode === 'build',
-                  signal,
-                  ...(imageConfig ? { imageConfig } : {}),
-                })
+                const automation = activePlan?.automation
+                let rawResult: Record<string, unknown>
+                if (managedBuild && name === 'submit_house_plan') {
+                  const validated = HousePlanSchema.safeParse(args)
+                  const plan = validated.data
+                  if (
+                    !plan?.automation ||
+                    (plan.automation.intent === 'repair' &&
+                      (!plan.automation.repairBefore || !inspectedScene))
+                  ) {
+                    rawResult = failure(
+                      'incomplete_build_plan',
+                      'Include the building type, overall dimensions, levels, furniture, phases and, for repairs, the inspected before condition.',
+                    )
+                  } else if (wroteScene) {
+                    rawResult = failure(
+                      'plan_in_progress',
+                      'Keep the accepted plan while construction is in progress.',
+                    )
+                  } else {
+                    activePlan = plan
+                    phaseChecks.length = 0
+                    phaseRead = false
+                    phaseChecked = false
+                    blockedWrite = false
+                    onPhase?.({ completed: 0, total: plan.automation.phases.length, checks: [] })
+                    rawResult = { status: 'plan_recorded', plan }
+                  }
+                } else if (name === 'read_house_plan') {
+                  const phase = automation?.phases[phaseChecks.length]
+                  phaseRead = Boolean(phase)
+                  rawResult = automation
+                    ? {
+                        plan: activePlan?.title,
+                        buildingType: automation.buildingType,
+                        widthMeters: automation.widthMeters,
+                        depthMeters: automation.depthMeters,
+                        heightMeters: automation.heightMeters,
+                        completed: phaseChecks.length,
+                        ...(phase
+                          ? {
+                              phaseNumber: phaseChecks.length + 1,
+                              phase,
+                              level: automation.levels.find((level) => level.name === phase.level),
+                              rooms: activePlan?.rooms
+                                .filter((room) => room.level === phase.level)
+                                .map(({ name, areaSqM, polygonMeters }) => ({
+                                  name,
+                                  areaSqM,
+                                  polygonMeters,
+                                })),
+                            }
+                          : {}),
+                        remaining: automation.phases.length - phaseChecks.length,
+                      }
+                    : failure('plan_required', 'Submit a complete house plan first.')
+                } else if (name === 'complete_house_phase') {
+                  const checkpoint = z
+                    .object({
+                      phaseNumber: z.number().int(),
+                      result: z.string().trim().min(1).max(600),
+                    })
+                    .safeParse(args)
+                  if (
+                    !automation ||
+                    !phaseRead ||
+                    !phaseChecked ||
+                    checkpoint.data?.phaseNumber !== phaseChecks.length + 1
+                  ) {
+                    rawResult = failure(
+                      'phase_not_checked',
+                      'Read the next phase, carry out its tasks and inspect the relevant scene before recording completion.',
+                    )
+                  } else if (phaseChecks.length === automation.phases.length - 1 && !verifyResult) {
+                    rawResult = failure(
+                      'verification_required',
+                      'Run verify_scene on the whole scene after the last edit before closing the final phase.',
+                    )
+                  } else {
+                    phaseChecks.push(checkpoint.data.result)
+                    phaseRead = false
+                    phaseChecked = false
+                    onPhase?.({
+                      completed: phaseChecks.length,
+                      total: automation.phases.length,
+                      checks: [...phaseChecks],
+                    })
+                    rawResult = {
+                      completed: phaseChecks.length,
+                      remaining: automation.phases.length - phaseChecks.length,
+                      result: checkpoint.data.result,
+                    }
+                  }
+                } else if (managedBuild && tool.write && (!automation || !phaseRead)) {
+                  blockedWrite = !automation
+                  rawResult = failure(
+                    'plan_phase_required',
+                    'Submit the plan and read the next phase before making scene changes.',
+                  )
+                } else if (
+                  managedBuild &&
+                  automation?.intent === 'repair' &&
+                  tool.write &&
+                  repairWouldReplaceScene(name, args, nodeType)
+                ) {
+                  rawResult = failure(
+                    'repair_scope',
+                    'Repair the affected elements in the existing building. Existing buildings and levels are protected.',
+                  )
+                } else {
+                  rawResult = await execute(name, args, {
+                    allowWrites: mode === 'build',
+                    signal,
+                    ...(imageConfig ? { imageConfig } : {}),
+                  })
+                  if (tool.write) phaseChecked = false
+                  if (!rawResult.error && SCENE_INSPECTIONS.has(name)) {
+                    inspectedScene = true
+                    if (phaseRead) phaseChecked = true
+                  }
+                }
                 const prepared = prepareToolResult(name, rawResult, pictures)
                 result = prepared.output
                 acceptedPreviews = prepared.acceptedPreviews
                 status = result.error ? 'error' : 'completed'
-                if (status === 'completed') {
-                  const toolMeta = HOUSE_AGENT_TOOLS.find((t) => t.contract.name === name)
-                  if (toolMeta?.write) {
+                if (!rawResult.error) {
+                  if (tool.write && (status === 'completed' || managedBuild)) {
                     wroteScene = true
                     wroteSinceLastVerify = true
                     verifyResult = null
-                  } else if (name === 'verify_scene') {
+                  } else if (
+                    name === 'verify_scene' &&
+                    !('room' in (args as object) || 'type' in (args as object))
+                  ) {
                     wroteSinceLastVerify = false
-                    const rawIssues = Array.isArray(result.issues)
-                      ? result.issues.map((i) => (typeof i === 'string' ? i : JSON.stringify(i)))
+                    const rawIssues = Array.isArray(rawResult.issues)
+                      ? rawResult.issues.map((i) => (typeof i === 'string' ? i : JSON.stringify(i)))
                       : []
                     verifyResult = {
-                      ok: !result.error && result.valid !== false && rawIssues.length === 0,
+                      ok: rawResult.valid !== false && rawIssues.length === 0,
                       issues: rawIssues,
                     }
                   } else if (name === 'view_scene') {
@@ -317,11 +498,11 @@ export async function runHouseAgent(options: HouseAgentRunOptions): Promise<Hous
                 }
                 if (
                   name === 'submit_house_plan' &&
-                  result.status === 'plan_recorded' &&
-                  result.plan
+                  rawResult.status === 'plan_recorded' &&
+                  rawResult.plan
                 ) {
                   planSubmitted = true
-                  onPlan?.(result.plan as HousePlan)
+                  onPlan?.(rawResult.plan as HousePlan)
                 }
               } catch (error) {
                 result = failure(

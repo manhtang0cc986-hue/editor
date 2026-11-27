@@ -732,6 +732,10 @@ msgid "app.houseAgent.plan.dimensionsTitle"
 msgstr "Dimension evidence"
 
 #: apps/editor/components/house-agent-plan-card.tsx
+msgid "app.houseAgent.plan.furnitureByLevel"
+msgstr "Floors and furniture"
+
+#: apps/editor/components/house-agent-plan-card.tsx
 msgid "app.houseAgent.plan.openingsLabel"
 msgstr "openings"
 
@@ -742,6 +746,14 @@ msgstr "Questions to confirm"
 #: apps/editor/components/house-agent-plan-card.tsx
 msgid "app.houseAgent.plan.readyHint"
 msgstr "All required dimensions are accounted for and ready to build."
+
+#: apps/editor/components/house-agent-plan-card.tsx
+msgid "app.houseAgent.plan.repairAfter"
+msgstr "Repair plan"
+
+#: apps/editor/components/house-agent-plan-card.tsx
+msgid "app.houseAgent.plan.repairBefore"
+msgstr "Before repair"
 
 #: apps/editor/components/house-agent-plan-card.tsx
 msgid "app.houseAgent.plan.roomsCountLabel"

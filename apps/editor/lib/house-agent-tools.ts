@@ -83,6 +83,23 @@ export const HOST_AGENT_CONTRACTS: readonly AgentToolContract[] = [
     input: HousePlanSchema.shape,
   },
   {
+    name: 'read_house_plan',
+    title: 'Read current house plan and next phase',
+    description:
+      'Read the accepted plan and its next pending phase. Call before editing each phase.',
+    input: {},
+  },
+  {
+    name: 'complete_house_phase',
+    title: 'Record completed house construction phase',
+    description:
+      'After checking the current phase against the live scene, record its result. Use the one-based phaseNumber from read_house_plan.',
+    input: {
+      phaseNumber: z.number().int().min(1),
+      result: z.string().min(1).max(600),
+    },
+  },
+  {
     name: 'generate_design_image',
     title: 'Generate architectural design image',
     description:

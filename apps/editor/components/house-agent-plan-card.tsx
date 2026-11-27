@@ -2,7 +2,7 @@
 
 import { usePascalI18n } from '@pascal-app/core'
 import { AlertTriangle, CheckCircle2, Compass, Layers, Ruler } from 'lucide-react'
-import type { HousePlan } from '@/lib/house-agent-protocol'
+import type { HousePlan, HousePlanProgress } from '@/lib/house-agent-protocol'
 
 const SOURCE_STYLE: Record<HousePlan['dimensions'][number]['source'], string> = {
   measured: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
@@ -11,8 +11,15 @@ const SOURCE_STYLE: Record<HousePlan['dimensions'][number]['source'], string> = 
   proposed: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
 }
 
-export function HouseAgentPlanCard({ plan }: { plan: HousePlan }) {
+export function HouseAgentPlanCard({
+  plan,
+  progress,
+}: {
+  plan: HousePlan
+  progress?: HousePlanProgress | null
+}) {
   const i18n = usePascalI18n()
+  const automation = plan.automation
 
   const sourceLabel = (source: HousePlan['dimensions'][number]['source']) => {
     switch (source) {
@@ -29,8 +36,23 @@ export function HouseAgentPlanCard({ plan }: { plan: HousePlan }) {
 
   return (
     <div className="space-y-3 rounded-xl border border-sky-500/30 bg-sky-950/20 p-3 text-xs">
+      {automation?.repairBefore && (
+        <div className="rounded-lg border border-white/10 bg-black/30 p-2.5">
+          <p className="font-medium text-zinc-200">
+            {i18n._({ id: 'app.houseAgent.plan.repairBefore', message: 'Before repair' })}
+          </p>
+          <p className="mt-1 whitespace-pre-wrap break-words leading-5 text-zinc-300">
+            {automation.repairBefore}
+          </p>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-2">
         <div>
+          {automation?.intent === 'repair' && (
+            <p className="mb-1 font-medium text-zinc-300">
+              {i18n._({ id: 'app.houseAgent.plan.repairAfter', message: 'Repair plan' })}
+            </p>
+          )}
           <p className="font-semibold text-sky-200">{plan.title}</p>
           <p className="mt-1 leading-5 text-zinc-300">{plan.summary}</p>
         </div>
@@ -63,6 +85,87 @@ export function HouseAgentPlanCard({ plan }: { plan: HousePlan }) {
           </span>
         </div>
       </div>
+
+      {automation && (
+        <>
+          <div className="rounded-lg border border-white/10 bg-black/30 p-2.5">
+            <p className="font-medium text-white">{automation.buildingType}</p>
+            <p className="mt-1 break-words font-mono text-sky-200">
+              {automation.widthMeters} × {automation.depthMeters} × {automation.heightMeters} m
+            </p>
+          </div>
+          <details open className="rounded-lg border border-white/10 bg-black/20 p-2">
+            <summary className="cursor-pointer font-medium text-zinc-200">
+              {i18n._({
+                id: 'app.houseAgent.plan.furnitureByLevel',
+                message: 'Floors and furniture',
+              })}{' '}
+              ({automation.levels.length})
+            </summary>
+            <ul className="mt-2 space-y-2">
+              {automation.levels.map((level, index) => (
+                <li key={`${level.name}-${index}`} className="rounded bg-white/5 p-2">
+                  <p className="font-medium text-white">
+                    {level.name} · {level.heightMeters} m
+                  </p>
+                  {level.furniture.length > 0 && (
+                    <ul className="mt-1 list-disc space-y-1 pl-4 text-zinc-300">
+                      {level.furniture.map((item, index) => (
+                        <li key={`${item}-${index}`}>{item}</li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
+          <details open className="rounded-lg border border-white/10 bg-black/20 p-2">
+            <summary className="cursor-pointer font-medium text-zinc-200">
+              {i18n._({ id: 'app.houseAgent.plan.stepsTitle', message: 'Construction sequence' })} (
+              {progress ? `${progress.completed}/${progress.total}` : automation.phases.length})
+            </summary>
+            {progress && (
+              <progress
+                aria-label={i18n._({
+                  id: 'app.houseAgent.plan.stepsTitle',
+                  message: 'Construction sequence',
+                })}
+                className="mt-2 h-1 w-full accent-sky-400"
+                value={progress.completed}
+                max={progress.total}
+              />
+            )}
+            <ol className="mt-2 space-y-2">
+              {automation.phases.map((phase, index) => (
+                <li key={`${phase.title}-${index}`} className="flex gap-2 rounded bg-white/5 p-2">
+                  <span className="shrink-0 pt-0.5 font-mono text-sky-300">
+                    {progress && index < progress.completed ? (
+                      <CheckCircle2 size={13} />
+                    ) : (
+                      index + 1
+                    )}
+                  </span>
+                  <div className="min-w-0 break-words">
+                    <p className="font-medium text-white">
+                      {phase.level} · {phase.title}
+                    </p>
+                    <ul className="mt-1 space-y-1 text-zinc-300">
+                      {phase.tasks.map((task, index) => (
+                        <li key={`${task}-${index}`}>{task}</li>
+                      ))}
+                    </ul>
+                    {progress?.checks[index] && (
+                      <p className="mt-2 border-t border-white/10 pt-1.5 text-emerald-200">
+                        {progress.checks[index]}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </details>
+        </>
+      )}
 
       {plan.dimensions.length > 0 && (
         <details open className="rounded-lg border border-white/10 bg-black/20 p-2">
@@ -139,17 +242,19 @@ export function HouseAgentPlanCard({ plan }: { plan: HousePlan }) {
         </div>
       </details>
 
-      <details className="rounded-lg border border-white/10 bg-black/20 p-2">
-        <summary className="cursor-pointer font-medium text-zinc-200">
-          {i18n._({ id: 'app.houseAgent.plan.stepsTitle', message: 'Construction sequence' })} (
-          {plan.constructionSteps.length})
-        </summary>
-        <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] text-zinc-300">
-          {plan.constructionSteps.map((step, idx) => (
-            <li key={`step-${idx}`}>{step}</li>
-          ))}
-        </ol>
-      </details>
+      {!automation && (
+        <details className="rounded-lg border border-white/10 bg-black/20 p-2">
+          <summary className="cursor-pointer font-medium text-zinc-200">
+            {i18n._({ id: 'app.houseAgent.plan.stepsTitle', message: 'Construction sequence' })} (
+            {plan.constructionSteps.length})
+          </summary>
+          <ol className="mt-2 list-decimal space-y-1 pl-4 text-[11px] text-zinc-300">
+            {plan.constructionSteps.map((step, idx) => (
+              <li key={`step-${idx}`}>{step}</li>
+            ))}
+          </ol>
+        </details>
+      )}
 
       {plan.openQuestions.length > 0 && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-950/30 p-2">
@@ -168,7 +273,7 @@ export function HouseAgentPlanCard({ plan }: { plan: HousePlan }) {
         </div>
       )}
 
-      {plan.openQuestions.length === 0 && (
+      {!automation && plan.openQuestions.length === 0 && (
         <p className="flex items-center gap-1.5 text-[11px] text-emerald-300">
           <CheckCircle2 size={13} />
           {i18n._({

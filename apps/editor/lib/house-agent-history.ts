@@ -1,13 +1,28 @@
 import { z } from 'zod'
-import { AgentMessageSchema, HousePlanSchema } from './house-agent-protocol'
+import {
+  type AgentMessage,
+  AgentMessageSchema,
+  HousePlanProgressSchema,
+  HousePlanSchema,
+} from './house-agent-protocol'
+
+const MAX_CHAT_MESSAGES = 240
+
+export function recentAgentMessages(messages: AgentMessage[]): AgentMessage[] {
+  if (messages.length <= MAX_CHAT_MESSAGES) return messages
+  let start = messages.length - MAX_CHAT_MESSAGES
+  while (messages[start]?.role === 'tool') start += 1
+  return messages.slice(start)
+}
 
 export const ChatRecordSchema = z.object({
   id: z.string(),
   sceneId: z.string(),
   title: z.string().max(100),
   updatedAt: z.number(),
-  messages: z.array(AgentMessageSchema).max(240),
+  messages: z.array(AgentMessageSchema).max(MAX_CHAT_MESSAGES),
   plan: HousePlanSchema.nullable(),
+  planProgress: HousePlanProgressSchema.optional(),
   planPending: z.boolean().optional(),
 })
 export type ChatRecord = z.infer<typeof ChatRecordSchema>

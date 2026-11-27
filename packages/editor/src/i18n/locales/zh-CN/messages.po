@@ -1543,6 +1543,14 @@ msgstr "分析推理并规划"
 msgid "app.houseAgent.plan.dimensionsTitle"
 msgstr "尺寸依据与校准"
 
+# English: "Floors and furniture"
+# Source-Hash: 4fc009cc8769e83e
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.furnitureByLevel"
+msgstr "楼层与家具"
+
 # Source-Hash: 86c3cbadef39070d
 # Review: required
 # English: "openings"
@@ -1566,6 +1574,22 @@ msgstr "待确认问题"
 #, fuzzy
 msgid "app.houseAgent.plan.readyHint"
 msgstr "所有关键尺寸已核对就绪，可以开始建模。"
+
+# English: "Repair plan"
+# Source-Hash: b0a7f191c38b6160
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.repairAfter"
+msgstr "修复方案"
+
+# English: "Before repair"
+# Source-Hash: d968ae25559b2824
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.repairBefore"
+msgstr "修复前"
 
 # Source-Hash: 59f5d75b31635487
 # Review: required

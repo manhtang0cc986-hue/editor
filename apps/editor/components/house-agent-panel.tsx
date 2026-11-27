@@ -1,6 +1,6 @@
 'use client'
 
-import { usePascalI18n, useScene } from '@pascal-app/core'
+import { type AnyNodeId, usePascalI18n, useScene } from '@pascal-app/core'
 import { applySceneGraphToEditor, type SceneGraph } from '@pascal-app/editor'
 import { useViewer } from '@pascal-app/viewer'
 import {
@@ -23,7 +23,12 @@ import {
 import { type ClipboardEvent, useEffect, useEffectEvent, useRef, useState } from 'react'
 import { getLocalAwareCatalog } from '@/lib/house-agent-catalog'
 import { captureEphemeralViewport, executeHouseAgentTool } from '@/lib/house-agent-executor'
-import { type ChatRecord, listAgentChats, saveAgentChat } from '@/lib/house-agent-history'
+import {
+  type ChatRecord,
+  listAgentChats,
+  recentAgentMessages,
+  saveAgentChat,
+} from '@/lib/house-agent-history'
 import {
   type AgentBuildProfile,
   AgentBuildProfileSchema,
@@ -36,6 +41,7 @@ import {
   type AgentStreamEvent,
   type DetectedModelItem,
   type HousePlan,
+  type HousePlanProgress,
   type ImageClientConfig,
   type ImageConfiguration,
   type ImageGenMode,
@@ -174,7 +180,7 @@ async function streamAgentTurn(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      messages: history,
+      messages: recentAgentMessages(history),
       mode: runMode,
       stream: true,
       ...(configOverride ? { config: configOverride } : {}),
@@ -257,6 +263,7 @@ export function HouseAgentPanel({
   const [streamState, setStreamState] = useState<HouseAgentStreamState | null>(null)
   const [events, setEvents] = useState<HouseAgentToolEvent[]>([])
   const [currentPlan, setCurrentPlan] = useState<HousePlan | null>(null)
+  const [planProgress, setPlanProgress] = useState<HousePlanProgress | null>(null)
   const [draft, setDraft] = useState('')
   const [images, setImages] = useState<{ name: string; url: string }[]>([])
   const [busy, setBusy] = useState(false)
@@ -286,7 +293,7 @@ export function HouseAgentPanel({
   const [envSaveState, setEnvSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [envSaveError, setEnvSaveError] = useState('')
   const modelTab = customSettings.modelTab ?? 'architect'
-  const buildProfile = customSettings.buildProfile ?? 'structure'
+  const buildProfile = customSettings.buildProfile ?? 'interiors'
   const chatModels = agentModels.models.filter((model) => model.kind === 'chat')
   const agentBaseUrl =
     customSettings.baseUrl.trim() || config?.baseUrl || 'https://api.openai.com/v1'
@@ -786,6 +793,7 @@ export function HouseAgentPanel({
     setMessages([])
     setEvents([])
     setCurrentPlan(null)
+    setPlanProgress(null)
     setStreamState(null)
     setHasPlan(false)
     setHasBuilt(false)
@@ -852,17 +860,25 @@ export function HouseAgentPanel({
     if (mode === 'plan') {
       setHasPlan(false)
       setCurrentPlan(null)
+      setPlanProgress(null)
     }
     setMessages(next)
     setDraft('')
     setImages([])
     try {
       let latestPlan = mode === 'plan' ? null : currentPlan
+      let latestProgress = mode === 'plan' ? null : planProgress
       const result = await runHouseAgent({
         messages: next,
         mode,
         signal: abort.signal,
-        maxRounds: 32,
+        maxRounds: 64,
+        managedBuild: mode === 'build',
+        nodeType: (id) => useScene.getState().nodes[id as AnyNodeId]?.type,
+        onPhase: (progress) => {
+          latestProgress = progress
+          setPlanProgress(progress)
+        },
         maxToolCalls: 100,
         execute: executeHouseAgentTool,
         ...(imageRuntimeOverride ? { imageConfig: imageRuntimeOverride } : {}),
@@ -894,8 +910,9 @@ export function HouseAgentPanel({
           sceneId,
           title: title.slice(0, 100),
           updatedAt: Date.now(),
-          messages: result.messages,
+          messages: recentAgentMessages(result.messages),
           plan: latestPlan,
+          ...(latestProgress ? { planProgress: latestProgress } : {}),
           planPending,
         })
       } catch {
@@ -1098,6 +1115,7 @@ export function HouseAgentPanel({
                   setChatId(record.id)
                   setMessages(record.messages)
                   setCurrentPlan(record.plan)
+                  setPlanProgress(record.planProgress ?? null)
                   setHasPlan(record.plan !== null && record.planPending === true)
                   setHasBuilt(false)
                   setNeedsReverify(false)
@@ -1599,7 +1617,7 @@ export function HouseAgentPanel({
                 ),
               )}
 
-              {currentPlan && <HouseAgentPlanCard plan={currentPlan} />}
+              {currentPlan && <HouseAgentPlanCard plan={currentPlan} progress={planProgress} />}
 
               {streamState && (streamState.reasoning || streamState.content) && (
                 <article className="space-y-2 rounded-xl border border-sky-500/30 bg-white/5 p-3 text-xs leading-5">

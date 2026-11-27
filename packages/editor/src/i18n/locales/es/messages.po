@@ -1543,6 +1543,14 @@ msgstr "Analizar y planificar"
 msgid "app.houseAgent.plan.dimensionsTitle"
 msgstr "Evidencia de dimensiones"
 
+# English: "Floors and furniture"
+# Source-Hash: 4fc009cc8769e83e
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.furnitureByLevel"
+msgstr "Plantas y mobiliario"
+
 # Source-Hash: 86c3cbadef39070d
 # Review: required
 # English: "openings"
@@ -1566,6 +1574,22 @@ msgstr "Preguntas por confirmar"
 #, fuzzy
 msgid "app.houseAgent.plan.readyHint"
 msgstr "Todas las dimensiones necesarias están verificadas y listas para construir."
+
+# English: "Repair plan"
+# Source-Hash: b0a7f191c38b6160
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.repairAfter"
+msgstr "Plan de reparación"
+
+# English: "Before repair"
+# Source-Hash: d968ae25559b2824
+# Review: required
+#: apps/editor/components/house-agent-plan-card.tsx
+#, fuzzy
+msgid "app.houseAgent.plan.repairBefore"
+msgstr "Antes de la reparación"
 
 # Source-Hash: 59f5d75b31635487
 # Review: required
