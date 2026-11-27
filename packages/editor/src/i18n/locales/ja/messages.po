@@ -487,14 +487,6 @@ msgstr "現在の 3D ビューを取得"
 msgid "app.houseAgent.close"
 msgstr "エージェントパネルを閉じる"
 
-# Source-Hash: 56526e34d600c1a0
-# Review: required
-# English: "Configure a vision model with tool calling below or in .env.local."
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.configure"
-msgstr "下または .env.local に画像とツール呼び出し対応モデルを設定してください。"
-
 # Source-Hash: 158e87eaccb70755
 # Review: required
 # English: "Drawing or reference image"
@@ -623,26 +615,10 @@ msgstr "リビングを作成"
 msgid "app.houseAgent.imageLimit"
 msgstr "各 5 MB 未満の PNG・JPEG・WebP 画像を最大 8 枚まで選択してください。"
 
-# Source-Hash: ab212e30765b1f98
-# Review: required
-# English: "Image API Key (separate from chat agent)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.apiKey"
-msgstr "画像生成 API キー（チャット側と独立）"
-
-# Source-Hash: c9a8b7e290b5a221
-# Review: required
-# English: "Image API Base URL"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.baseUrl"
-msgstr "画像生成 API ベース URL"
-
 # Source-Hash: 0cf4731b6f03ab10
 # Review: required
 # English: "API Mode"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.imageSettings.mode"
 msgstr "API モード"
@@ -650,42 +626,10 @@ msgstr "API モード"
 # Source-Hash: 05b65242d8c48791
 # Review: required
 # English: "Auto"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.imageSettings.mode.auto"
 msgstr "自動判定"
-
-# Source-Hash: 227f9bfd6ce4debd
-# Review: required
-# English: "Chat Image API (/chat/completions)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.mode.chat"
-msgstr "チャット画像 API (/chat/completions)"
-
-# Source-Hash: 73b03458fe477626
-# Review: required
-# English: "Images API (/images/generations)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.mode.images"
-msgstr "画像生成 API (/images/generations)"
-
-# Source-Hash: b82ae48143efebfb
-# Review: required
-# English: "Image Model"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.model"
-msgstr "画像生成モデル"
-
-# Source-Hash: c609871ba56bea5d
-# Review: required
-# English: "Design Image Generation Model & Key (Independent)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.title"
-msgstr "建築デザイン画像生成モデル・キー（独立設定）"
 
 # Source-Hash: 21c6bf9f51753cdb
 # Review: required
@@ -758,14 +702,6 @@ msgstr "この生成された建築デザイン画像を解析し、配置・ボ
 #, fuzzy
 msgid "app.houseAgent.imageStudio.close"
 msgstr "画像スタジオを閉じる"
-
-# Source-Hash: c5a3eccf6dcabeb5
-# Review: required
-# English: "Configure"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.configureBtn"
-msgstr "設定する"
 
 # Source-Hash: 41533734a5a7b89d
 # Review: required
@@ -918,14 +854,6 @@ msgstr "レイアウトに忠実な建築レンダリング"
 #, fuzzy
 msgid "app.houseAgent.imageStudio.modelSubtitleVideo"
 msgstr "開始・終了フレーム補間動画"
-
-# Source-Hash: 769f54fce115fd32
-# Review: required
-# English: "No key"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.needKeyTag"
-msgstr "キー未設定"
 
 # Source-Hash: b896f047ef820c55
 # Review: required
@@ -1423,18 +1351,11 @@ msgstr "当前 API 未返回可用对话模型。"
 msgid "app.houseAgent.modelPicker.noMetadata"
 msgstr "服务商未列出支持的推理档位，将由 Auto 使用默认值。"
 
-# Source-Hash: b78750eca66f2387
-# Review: required
-# English: "Scan your configured API to list its chat models."
-#: apps/editor/components/house-agent-architect-popover.tsx
-#, fuzzy
-msgid "app.houseAgent.modelPicker.scanFirst"
-msgstr "请先识别已配置的 API 模型列表。"
-
 # Source-Hash: 8830562fadbb1d7d
 # Review: required
 # English: "API settings"
-#: apps/editor/components/house-agent-architect-popover.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
+#: apps/editor/components/model-api-setup-hint.tsx
 #, fuzzy
 msgid "app.houseAgent.modelPicker.settings"
 msgstr "API 设置"
@@ -1775,18 +1696,10 @@ msgstr "在布局基础上完善楼板、楼梯与屋顶结构。"
 msgid "app.houseAgent.scope.title"
 msgstr "建模范围"
 
-# Source-Hash: 46378c7e923a5246
-# Review: required
-# English: "API Key (optional if set in .env.local)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.apiKey"
-msgstr "API キー（.env.local 設定時は省略可）"
-
 # Source-Hash: ebe8cce4f692b95e
 # Review: required
 # English: "API Base URL"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.baseUrl"
 msgstr "API ベース URL"
@@ -1794,25 +1707,15 @@ msgstr "API ベース URL"
 # Source-Hash: 4927fecd81c3dd60
 # Review: required
 # English: "Detect"
-#: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.detect"
 msgstr "モデル検出"
-
-# Source-Hash: 54cf48ffe3835389
-# Review: required
-# English: "Detected {count} available models"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.detectedCount"
-msgstr "{count} 個の利用可能モデルを検出しました"
 
 # Source-Hash: 5bbcfbe2a7a10896
 # Review: required
 # English: "Detecting…"
 #: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.detecting"
 msgstr "検出中…"
@@ -1820,59 +1723,18 @@ msgstr "検出中…"
 # Source-Hash: 9c16c09f0c180580
 # Review: required
 # English: "Model"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.model"
 msgstr "モデル名"
-
-# Source-Hash: 0d21f4ab0bb04ac3
-# Review: required
-# English: "Select a detected model…"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.pickModel"
-msgstr "検出されたモデルを選択…"
 
 # Source-Hash: e85cc54ef55da351
 # Review: required
 # English: "Reasoning effort"
 #: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.reasoningEffort"
 msgstr "推論レベル"
-
-# Source-Hash: 6704554a28f207fb
-# Review: required
-# English: "Persisted in project .env.local"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.savedEnvHint"
-msgstr ".env.local に永続保存済み"
-
-# Source-Hash: 84b9d158795c682c
-# Review: required
-# English: "Save keys & models to .env.local"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.saveEnv"
-msgstr "プロジェクト環境 (.env.local) に保存"
-
-# Source-Hash: 4e65400e023b52a3
-# Review: required
-# English: "Saving…"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.savingEnv"
-msgstr "保存中…"
-
-# Source-Hash: 408abf61ff321510
-# Review: required
-# English: "Model & reasoning settings"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.toggle"
-msgstr "モデルと推論の設定"
 
 # Source-Hash: 6fcfbfcf254062df
 # Review: required
@@ -2854,6 +2716,7 @@ msgstr "シーン"
 # AI-Provider: claude-code
 # AI-Model: claude-opus-5-5
 # English: "Settings"
+#: apps/editor/components/model-api-setup-hint.tsx
 #: apps/editor/components/scene-loader.tsx
 #, fuzzy
 msgid "app.sceneLoader.settings"

@@ -2,7 +2,7 @@
 
 import { type AssetInput, artifactHash, usePascalI18n } from '@pascal-app/core'
 import { activateCatalogItem, ItemsPanel } from '@pascal-app/editor'
-import { ArrowUpRight, Box, ImagePlus, RefreshCw, Sparkles, Type, Upload } from 'lucide-react'
+import { ArrowUpRight, Box, ImagePlus, Sparkles, Type, Upload } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MODEL_API_CHANGED } from '@/lib/model-api-settings'
@@ -14,6 +14,7 @@ import {
   ModelAssetForm,
   validateModelGlb,
 } from '@/lib/model-assets'
+import { ModelApiSetupHint } from './model-api-setup-hint'
 import type { ModelBounds } from './model-asset-preview'
 
 const ModelAssetPreview = dynamic(
@@ -481,26 +482,9 @@ function PersonalModels() {
             <Sparkles size={15} />
             {i18n._({ id: 'app.modelAssets.generate', message: 'Generate 3D model' })}
           </button>
-          {configured !== true && (
-            <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/7 p-2.5">
-              <div className="min-w-0 flex-1 text-xs text-muted-foreground">
-                {i18n._({
-                  id: 'app.modelAssets.configure',
-                  message: 'Set MESHY_API_KEY in .env.local to enable generation.',
-                })}
-              </div>
-              <button
-                type="button"
-                className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
-                aria-label={i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
-                title={i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
-                onClick={() => {
-                  setError('')
-                  void checkConfiguration()
-                }}
-              >
-                <RefreshCw size={13} />
-              </button>
+          {configured === false && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/7 p-2.5">
+              <ModelApiSetupHint />
             </div>
           )}
           {job && (

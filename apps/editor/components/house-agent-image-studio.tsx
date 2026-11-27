@@ -6,7 +6,6 @@ import {
   BookOpen,
   Camera,
   Check,
-  ChevronDown,
   Download,
   Film,
   Home,
@@ -24,13 +23,14 @@ import {
 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { captureEphemeralViewport } from '@/lib/house-agent-executor'
-import type { ImageClientConfig, ImageGenPreset, ImageGenSize } from '@/lib/house-agent-protocol'
+import type { ImageGenPreset, ImageGenSize } from '@/lib/house-agent-protocol'
 import {
   captureCurrent3DPhoto,
   captureRoomShowcasePhotos,
   type Recorded3DVideo,
   record3DWalkthroughVideo,
 } from '@/lib/scene-media-capture'
+import { ModelApiSetupHint } from './model-api-setup-hint'
 
 type GeneratedDesignItem = {
   id: string
@@ -71,8 +71,6 @@ const BADGE_READY = 'READY'
 type HouseAgentImageStudioProps = {
   configured: boolean
   modelLabel: string
-  imageConfig?: ImageClientConfig
-  onOpenSettings: () => void
   onAttachToChat: (item: { imageDataUrl: string; prompt: string; preset: ImageGenPreset }) => void
   studioTab: 'image' | 'video'
 }
@@ -107,8 +105,6 @@ function readFileAsDataUrl(file: File): Promise<string> {
 export function HouseAgentImageStudio({
   configured,
   modelLabel,
-  imageConfig,
-  onOpenSettings,
   onAttachToChat,
   studioTab,
 }: HouseAgentImageStudioProps) {
@@ -437,7 +433,6 @@ export function HouseAgentImageStudio({
             preset,
             size: selectedAspect.size,
             ...(primaryRef ? { referenceImage: primaryRef } : {}),
-            ...(imageConfig ? { config: imageConfig } : {}),
           }),
           signal: controller.signal,
         }).then(async (response) => {
@@ -896,43 +891,21 @@ export function HouseAgentImageStudio({
             <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
               {i18n._({ id: 'app.houseAgent.imageStudio.modelLabel', message: 'MODEL' })}
             </span>
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2.5 text-left hover:border-white/25"
-            >
+            <div className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/50 text-violet-300">
                 <Sparkles size={15} />
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate font-semibold text-xs text-zinc-100">
-                    {configured && modelLabel
-                      ? modelLabel
-                      : i18n._({
-                          id: 'app.houseAgent.imageStudio.configureBtn',
-                          message: 'Configure',
-                        })}
+              {configured ? (
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className="truncate font-semibold text-xs text-zinc-100">{modelLabel}</span>
+                  <span className="rounded bg-amber-500/20 px-1 py-0.2 font-mono text-[9px] text-amber-200">
+                    {BADGE_READY}
                   </span>
-                  {configured ? (
-                    <span className="rounded bg-amber-500/20 px-1 py-0.2 font-mono text-[9px] text-amber-200">
-                      {BADGE_READY}
-                    </span>
-                  ) : (
-                    <span className="rounded bg-red-500/20 px-1 py-0.2 text-[9px] text-red-200">
-                      {i18n._({ id: 'app.houseAgent.imageStudio.needKeyTag', message: 'No key' })}
-                    </span>
-                  )}
                 </div>
-                <p className="truncate text-[10px] text-zinc-400">
-                  {i18n._({
-                    id: 'app.houseAgent.imageStudio.modelSubtitleImage',
-                    message: 'Layout-faithful architectural image generation',
-                  })}
-                </p>
-              </div>
-              <ChevronDown size={14} className="shrink-0 text-zinc-400" />
-            </button>
+              ) : (
+                <ModelApiSetupHint />
+              )}
+            </div>
           </section>
         )}
 

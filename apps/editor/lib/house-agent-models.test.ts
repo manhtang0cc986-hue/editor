@@ -119,20 +119,15 @@ test('saved chat credentials discover models that render with their brand logos'
     const html = renderToStaticMarkup(
       createElement(HouseAgentArchitectPopover, {
         tab: 'models',
-        profile: 'structure',
         effort: 'auto',
         currentModel: 'gpt-4o-mini',
         detectedModels: models.filter(({ kind }) => kind === 'chat'),
         scanned: true,
         loading: false,
         scanError: '',
-        canScan: true,
         onTabChange: noop,
-        onSelectProfile: noop,
         onSelectEffort: noop,
         onSelectModel: noop,
-        onScan: noop,
-        onOpenSettings: noop,
         onClose: noop,
       }),
     )
@@ -141,6 +136,7 @@ test('saved chat credentials discover models that render with their brand logos'
     expect(html).toContain('private-alias')
     expect(html).not.toContain('gpt-image-1')
     expect(html).not.toContain('synthetic-chat-key')
+    expect(html).not.toContain('API settings')
   } finally {
     upstream.mockRestore()
     if (previousUrl === undefined) delete process.env.PASCAL_AGENT_BASE_URL

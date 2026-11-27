@@ -1,13 +1,14 @@
 'use client'
 
 import { usePascalI18n } from '@pascal-app/core'
-import { Bot, Check, DraftingCompass, Layers3, RefreshCw, Settings2, X } from 'lucide-react'
+import { Bot, Check, DraftingCompass, Layers3, X } from 'lucide-react'
 import { houseAgentModelBrand } from '@/lib/house-agent-model-brand'
 import type {
   AgentReasoningEffort,
   DetectedModelItem,
   HouseBuildStage,
 } from '@/lib/house-agent-protocol'
+import { ModelApiSetupHint } from './model-api-setup-hint'
 
 export type HouseAgentModelTab = 'architect' | 'models'
 
@@ -19,12 +20,9 @@ type HouseAgentArchitectPopoverProps = {
   scanned: boolean
   loading: boolean
   scanError: string
-  canScan: boolean
   onTabChange: (tab: HouseAgentModelTab) => void
   onSelectEffort: (effort: AgentReasoningEffort) => void
   onSelectModel: (model: DetectedModelItem) => void
-  onScan: () => void
-  onOpenSettings: () => void
   onClose: () => void
 }
 
@@ -103,12 +101,9 @@ export function HouseAgentArchitectPopover({
   scanned,
   loading,
   scanError,
-  canScan,
   onTabChange,
   onSelectEffort,
   onSelectModel,
-  onScan,
-  onOpenSettings,
   onClose,
 }: HouseAgentArchitectPopoverProps) {
   const i18n = usePascalI18n()
@@ -234,22 +229,11 @@ export function HouseAgentArchitectPopover({
                   message: 'Detected chat models',
                 })}
               </h4>
-              <button
-                type="button"
-                onClick={canScan ? onScan : onOpenSettings}
-                disabled={loading}
-                className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/15 px-2 py-1.5 text-zinc-300 hover:bg-white/10 disabled:opacity-50"
-              >
-                {canScan ? <RefreshCw size={13} /> : <Settings2 size={13} />}
-                {loading
-                  ? i18n._({ id: 'app.houseAgent.settings.detecting', message: 'Detecting…' })
-                  : canScan
-                    ? i18n._({ id: 'app.houseAgent.settings.detect', message: 'Detect' })
-                    : i18n._({
-                        id: 'app.houseAgent.modelPicker.settings',
-                        message: 'API settings',
-                      })}
-              </button>
+              {loading && (
+                <span role="status" className="text-zinc-400">
+                  {i18n._({ id: 'app.houseAgent.settings.detecting', message: 'Detecting…' })}
+                </span>
+              )}
             </div>
             {scanError && (
               <p role="alert" className="text-rose-300">
@@ -280,17 +264,16 @@ export function HouseAgentArchitectPopover({
                 ))}
               </div>
             ) : !loading && !scanError ? (
-              <p className="leading-5 text-zinc-400">
-                {scanned
-                  ? i18n._({
-                      id: 'app.houseAgent.modelPicker.empty',
-                      message: 'The configured API returned no chat models.',
-                    })
-                  : i18n._({
-                      id: 'app.houseAgent.modelPicker.scanFirst',
-                      message: 'Scan your configured API to list its chat models.',
-                    })}
-              </p>
+              scanned ? (
+                <p className="leading-5 text-zinc-400">
+                  {i18n._({
+                    id: 'app.houseAgent.modelPicker.empty',
+                    message: 'The configured API returned no chat models.',
+                  })}
+                </p>
+              ) : (
+                <ModelApiSetupHint />
+              )
             ) : null}
           </div>
           {currentModel && (

@@ -204,10 +204,6 @@ msgid "app.houseAgent.close"
 msgstr "Close agent panel"
 
 #: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.configure"
-msgstr "Configure a vision model with tool calling below or in .env.local."
-
-#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.drawing"
 msgstr "Drawing or reference image"
 
@@ -271,37 +267,13 @@ msgstr "Create a living room"
 msgid "app.houseAgent.imageLimit"
 msgstr "Choose up to 8 PNG, JPEG or WebP images, each smaller than 5 MB."
 
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.imageSettings.apiKey"
-msgstr "Image API Key (separate from chat agent)"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.imageSettings.baseUrl"
-msgstr "Image API Base URL"
-
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 msgid "app.houseAgent.imageSettings.mode"
 msgstr "API Mode"
 
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 msgid "app.houseAgent.imageSettings.mode.auto"
 msgstr "Auto"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.imageSettings.mode.chat"
-msgstr "Chat Image API (/chat/completions)"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.imageSettings.mode.images"
-msgstr "Images API (/images/generations)"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.imageSettings.model"
-msgstr "Image Model"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.imageSettings.title"
-msgstr "Design Image Generation Model & Key (Independent)"
 
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.addModifier"
@@ -338,10 +310,6 @@ msgstr "Please study this generated architectural design image, analyze its layo
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.close"
 msgstr "Close image studio"
-
-#: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.configureBtn"
-msgstr "Configure"
 
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.download"
@@ -418,10 +386,6 @@ msgstr "Layout-faithful architectural image generation"
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.modelSubtitleVideo"
 msgstr "Start + end frame motion interpolation"
-
-#: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.needKeyTag"
-msgstr "No key"
 
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.noLevel"
@@ -671,11 +635,8 @@ msgstr "The configured API returned no chat models."
 msgid "app.houseAgent.modelPicker.noMetadata"
 msgstr "The provider does not list supported reasoning levels. Auto uses its default."
 
-#: apps/editor/components/house-agent-architect-popover.tsx
-msgid "app.houseAgent.modelPicker.scanFirst"
-msgstr "Scan your configured API to list its chat models."
-
-#: apps/editor/components/house-agent-architect-popover.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
+#: apps/editor/components/model-api-setup-hint.tsx
 msgid "app.houseAgent.modelPicker.settings"
 msgstr "API settings"
 
@@ -847,56 +808,25 @@ msgstr "Develops the layout with floors, stairs and the roof where needed."
 msgid "app.houseAgent.scope.title"
 msgstr "Build scope"
 
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.apiKey"
-msgstr "API Key (optional if set in .env.local)"
-
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 msgid "app.houseAgent.settings.baseUrl"
 msgstr "API Base URL"
 
-#: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 msgid "app.houseAgent.settings.detect"
 msgstr "Detect"
 
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.detectedCount"
-msgstr "Detected {count} available models"
-
 #: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.settings.detecting"
 msgstr "Detecting…"
 
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 msgid "app.houseAgent.settings.model"
 msgstr "Model"
 
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.pickModel"
-msgstr "Select a detected model…"
-
 #: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.settings.reasoningEffort"
 msgstr "Reasoning effort"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.savedEnvHint"
-msgstr "Persisted in project .env.local"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.saveEnv"
-msgstr "Save keys & models to .env.local"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.savingEnv"
-msgstr "Saving…"
-
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.settings.toggle"
-msgstr "Model & reasoning settings"
 
 #: apps/editor/components/house-agent-starters.tsx
 msgid "app.houseAgent.starters.attachPlan"
@@ -1311,6 +1241,7 @@ msgstr "Reload"
 msgid "app.sceneLoader.scene"
 msgstr "Scene"
 
+#: apps/editor/components/model-api-setup-hint.tsx
 #: apps/editor/components/scene-loader.tsx
 msgid "app.sceneLoader.settings"
 msgstr "Settings"

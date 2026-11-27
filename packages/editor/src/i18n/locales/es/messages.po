@@ -487,14 +487,6 @@ msgstr "Capturar vista 3D actual"
 msgid "app.houseAgent.close"
 msgstr "Cerrar panel del agente"
 
-# Source-Hash: 56526e34d600c1a0
-# Review: required
-# English: "Configure a vision model with tool calling below or in .env.local."
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.configure"
-msgstr "Configura un modelo con visión y herramientas abajo o en .env.local."
-
 # Source-Hash: 158e87eaccb70755
 # Review: required
 # English: "Drawing or reference image"
@@ -623,26 +615,10 @@ msgstr "Crear un salón"
 msgid "app.houseAgent.imageLimit"
 msgstr "Elige hasta 8 imágenes PNG, JPEG o WebP menores de 5 MB cada una."
 
-# Source-Hash: ab212e30765b1f98
-# Review: required
-# English: "Image API Key (separate from chat agent)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.apiKey"
-msgstr "Clave API de imagen (independiente del agente)"
-
-# Source-Hash: c9a8b7e290b5a221
-# Review: required
-# English: "Image API Base URL"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.baseUrl"
-msgstr "URL base de API de imagen"
-
 # Source-Hash: 0cf4731b6f03ab10
 # Review: required
 # English: "API Mode"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.imageSettings.mode"
 msgstr "Modo de API"
@@ -650,42 +626,10 @@ msgstr "Modo de API"
 # Source-Hash: 05b65242d8c48791
 # Review: required
 # English: "Auto"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.imageSettings.mode.auto"
 msgstr "Automático"
-
-# Source-Hash: 227f9bfd6ce4debd
-# Review: required
-# English: "Chat Image API (/chat/completions)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.mode.chat"
-msgstr "API de chat con imagen (/chat/completions)"
-
-# Source-Hash: 73b03458fe477626
-# Review: required
-# English: "Images API (/images/generations)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.mode.images"
-msgstr "API de imágenes (/images/generations)"
-
-# Source-Hash: b82ae48143efebfb
-# Review: required
-# English: "Image Model"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.model"
-msgstr "Modelo de imagen"
-
-# Source-Hash: c609871ba56bea5d
-# Review: required
-# English: "Design Image Generation Model & Key (Independent)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.imageSettings.title"
-msgstr "Modelo y clave de generación de imagen (independiente)"
 
 # Source-Hash: 21c6bf9f51753cdb
 # Review: required
@@ -758,14 +702,6 @@ msgstr "Estudia esta imagen arquitectónica generada, analiza su distribución, 
 #, fuzzy
 msgid "app.houseAgent.imageStudio.close"
 msgstr "Cerrar estudio de imagen"
-
-# Source-Hash: c5a3eccf6dcabeb5
-# Review: required
-# English: "Configure"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.configureBtn"
-msgstr "Configurar"
 
 # Source-Hash: 41533734a5a7b89d
 # Review: required
@@ -918,14 +854,6 @@ msgstr "Generación de render fiel a la planta"
 #, fuzzy
 msgid "app.houseAgent.imageStudio.modelSubtitleVideo"
 msgstr "Interpolación inicio + fin"
-
-# Source-Hash: 769f54fce115fd32
-# Review: required
-# English: "No key"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.needKeyTag"
-msgstr "Sin clave"
 
 # Source-Hash: b896f047ef820c55
 # Review: required
@@ -1423,18 +1351,11 @@ msgstr "La API no devolvió modelos de chat."
 msgid "app.houseAgent.modelPicker.noMetadata"
 msgstr "El proveedor no detalla niveles; Auto usa el valor predeterminado."
 
-# Source-Hash: b78750eca66f2387
-# Review: required
-# English: "Scan your configured API to list its chat models."
-#: apps/editor/components/house-agent-architect-popover.tsx
-#, fuzzy
-msgid "app.houseAgent.modelPicker.scanFirst"
-msgstr "Escanea la API para listar modelos."
-
 # Source-Hash: 8830562fadbb1d7d
 # Review: required
 # English: "API settings"
-#: apps/editor/components/house-agent-architect-popover.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
+#: apps/editor/components/model-api-setup-hint.tsx
 #, fuzzy
 msgid "app.houseAgent.modelPicker.settings"
 msgstr "Ajustes de API"
@@ -1775,18 +1696,10 @@ msgstr "Desarrolla forjados, escaleras y cubierta."
 msgid "app.houseAgent.scope.title"
 msgstr "Alcance"
 
-# Source-Hash: 46378c7e923a5246
-# Review: required
-# English: "API Key (optional if set in .env.local)"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.apiKey"
-msgstr "Clave API (opcional si está en .env.local)"
-
 # Source-Hash: ebe8cce4f692b95e
 # Review: required
 # English: "API Base URL"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.baseUrl"
 msgstr "URL base de la API"
@@ -1794,25 +1707,15 @@ msgstr "URL base de la API"
 # Source-Hash: 4927fecd81c3dd60
 # Review: required
 # English: "Detect"
-#: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.detect"
 msgstr "Detectar"
-
-# Source-Hash: 54cf48ffe3835389
-# Review: required
-# English: "Detected {count} available models"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.detectedCount"
-msgstr "{count} modelos disponibles detectados"
 
 # Source-Hash: 5bbcfbe2a7a10896
 # Review: required
 # English: "Detecting…"
 #: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.detecting"
 msgstr "Detectando…"
@@ -1820,59 +1723,18 @@ msgstr "Detectando…"
 # Source-Hash: 9c16c09f0c180580
 # Review: required
 # English: "Model"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-api-settings-dialog.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.model"
 msgstr "Modelo"
-
-# Source-Hash: 0d21f4ab0bb04ac3
-# Review: required
-# English: "Select a detected model…"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.pickModel"
-msgstr "Seleccionar un modelo detectado…"
 
 # Source-Hash: e85cc54ef55da351
 # Review: required
 # English: "Reasoning effort"
 #: apps/editor/components/house-agent-architect-popover.tsx
-#: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.settings.reasoningEffort"
 msgstr "Nivel de razonamiento"
-
-# Source-Hash: 6704554a28f207fb
-# Review: required
-# English: "Persisted in project .env.local"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.savedEnvHint"
-msgstr "Guardado en .env.local"
-
-# Source-Hash: 84b9d158795c682c
-# Review: required
-# English: "Save keys & models to .env.local"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.saveEnv"
-msgstr "Guardar claves en .env.local"
-
-# Source-Hash: 4e65400e023b52a3
-# Review: required
-# English: "Saving…"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.savingEnv"
-msgstr "Guardando…"
-
-# Source-Hash: 408abf61ff321510
-# Review: required
-# English: "Model & reasoning settings"
-#: apps/editor/components/house-agent-panel.tsx
-#, fuzzy
-msgid "app.houseAgent.settings.toggle"
-msgstr "Ajustes de modelo y razonamiento"
 
 # Source-Hash: 6fcfbfcf254062df
 # Review: required
@@ -2854,6 +2716,7 @@ msgstr "Escena"
 # AI-Provider: claude-code
 # AI-Model: claude-opus-5-5
 # English: "Settings"
+#: apps/editor/components/model-api-setup-hint.tsx
 #: apps/editor/components/scene-loader.tsx
 #, fuzzy
 msgid "app.sceneLoader.settings"
