@@ -373,6 +373,8 @@ export function InterfaceThemeRow({
 export interface SettingsPanelProps {
   /** Merged onto the scrolling root so hosts can restyle padding (e.g. inside a dialog). */
   className?: string
+  /** Host-provided settings entries displayed above scene settings. */
+  topContent?: ReactNode
   projectId?: string
   /** Shown as the scene name in apps the scene is sent to (Blender collection name). */
   projectName?: string
@@ -502,6 +504,7 @@ function FloorSettingsSection() {
 
 export function SettingsPanel({
   className,
+  topContent,
   projectId,
   projectName,
   projectVisibility,
@@ -898,6 +901,7 @@ export function SettingsPanel({
       )}
     >
       <div className="divide-y divide-border/60">
+        {topContent && <div className="pb-4">{topContent}</div>}
         <section className="space-y-3 py-5 first:pt-0 last:pb-0">
           <FloorSettingsSection />
         </section>

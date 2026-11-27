@@ -46,6 +46,7 @@ import {
   runHouseAgent,
 } from '@/lib/house-agent-runner'
 import { houseAgentSceneContext } from '@/lib/house-agent-workflow'
+import { MODEL_API_CHANGED } from '@/lib/model-api-settings'
 import { buildVillaWithCommands, type VillaStyle } from '@/lib/villa-auto-builder'
 import { HouseAgentActivity } from './house-agent-activity'
 import {
@@ -377,21 +378,34 @@ export function HouseAgentPanel({
   }, [showArchitectPopover])
   useEffect(() => {
     if (!open && !embedded) return
-    const abort = new AbortController()
-    fetch('/api/house-agent', { signal: abort.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Configuration could not be loaded.')
-        setConfig(await response.json())
-      })
-      .catch((error) => {
-        if (!abort.signal.aborted) setNotice(String(error))
-      })
-    fetch('/api/house-agent/image', { signal: abort.signal })
-      .then(async (response) => {
-        if (response.ok) setImageConfigStatus(await response.json())
-      })
-      .catch(() => undefined)
-    return () => abort.abort()
+    let request: AbortController | undefined
+    const loadConfiguration = () => {
+      request?.abort()
+      const abort = new AbortController()
+      request = abort
+      fetch('/api/house-agent', { signal: abort.signal })
+        .then(async (response) => {
+          if (!response.ok) throw new Error('Configuration could not be loaded.')
+          const body = await response.json()
+          if (!abort.signal.aborted) setConfig(body)
+        })
+        .catch((error) => {
+          if (!abort.signal.aborted) setNotice(String(error))
+        })
+      fetch('/api/house-agent/image', { signal: abort.signal })
+        .then(async (response) => {
+          if (!response.ok) return
+          const body = await response.json()
+          if (!abort.signal.aborted) setImageConfigStatus(body)
+        })
+        .catch(() => undefined)
+    }
+    loadConfiguration()
+    window.addEventListener(MODEL_API_CHANGED, loadConfiguration)
+    return () => {
+      request?.abort()
+      window.removeEventListener(MODEL_API_CHANGED, loadConfiguration)
+    }
   }, [open, embedded])
   useEffect(() => {
     if (

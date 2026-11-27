@@ -39,6 +39,14 @@ cp .env.example .env
 
 Local development and the official hosted editor work without any environment variables.
 
+### Model API configuration
+
+Open **Settings → API settings** to save separate keys and endpoints for chat,
+image, video, and Meshy 3D. Chat, image, and video discovery use a compatible
+`GET /models` endpoint. Meshy uses its balance endpoint to verify the key.
+Tests are read-only. The video category saves and tests a compatible provider
+for future use. Image Studio still records its video locally.
+
 ### Custom 3D models
 
 Open **Items → My models** to upload a self-contained GLB (up to 32 MB), preview it,

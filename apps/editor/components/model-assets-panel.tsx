@@ -5,6 +5,7 @@ import { activateCatalogItem, ItemsPanel } from '@pascal-app/editor'
 import { ArrowUpRight, Box, ImagePlus, RefreshCw, Sparkles, Type, Upload } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { MODEL_API_CHANGED } from '@/lib/model-api-settings'
 import {
   MAX_MODEL_BYTES,
   MAX_REFERENCE_BYTES,
@@ -158,8 +159,11 @@ function PersonalModels() {
       .catch((error) => {
         if (!controller.signal.aborted) setError(String(error))
       })
-    void checkConfiguration(controller.signal)
+    const refreshConfig = () => void checkConfiguration(controller.signal)
+    refreshConfig()
+    window.addEventListener(MODEL_API_CHANGED, refreshConfig)
     return () => {
+      window.removeEventListener(MODEL_API_CHANGED, refreshConfig)
       controller.abort()
       startRequest.current?.abort()
     }

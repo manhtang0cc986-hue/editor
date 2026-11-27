@@ -28,6 +28,7 @@ import { useThumbnailAutosave } from '@/lib/use-thumbnail-autosave'
 import { BuildTab } from './build-tab'
 import { EditorNavbar } from './editor-navbar'
 import { KitchenCommands } from './kitchen-browser'
+import { ModelApiSettingsDialog } from './model-api-settings-dialog'
 import { ModelAssetsPanel } from './model-assets-panel'
 import { PaintPanel } from './paint-panel'
 import { EditorViewerToolbarLeft, EditorViewerToolbarRight } from './viewer-toolbar'
@@ -428,6 +429,7 @@ function SceneEditor({ initialScene, meta: initialMeta }: SceneLoaderProps) {
         onThumbnailCapture={handleThumb}
         projectId={meta.projectId ?? 'default'}
         projectName={meta.name}
+        settingsPanelProps={{ topContent: <ModelApiSettingsDialog /> }}
         sidebarTabs={sidebarTabs}
         viewerBanner={<PoolSectionBanner />}
         viewerToolbarLeft={<EditorViewerToolbarLeft />}
