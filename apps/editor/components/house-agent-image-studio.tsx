@@ -67,8 +67,6 @@ const ASPECT_RATIOS: AspectRatioOption[] = [
 
 // i18n-ignore: short technical status badge
 const BADGE_READY = 'READY'
-// i18n-ignore: short technical status badge
-const BADGE_FAST = 'FAST'
 
 type HouseAgentImageStudioProps = {
   configured: boolean
@@ -76,7 +74,7 @@ type HouseAgentImageStudioProps = {
   imageConfig?: ImageClientConfig
   onOpenSettings: () => void
   onAttachToChat: (item: { imageDataUrl: string; prompt: string; preset: ImageGenPreset }) => void
-  onClose: () => void
+  studioTab: 'image' | 'video'
 }
 
 function getDefaultLevelId(): string | null {
@@ -112,10 +110,9 @@ export function HouseAgentImageStudio({
   imageConfig,
   onOpenSettings,
   onAttachToChat,
-  onClose,
+  studioTab,
 }: HouseAgentImageStudioProps) {
   const i18n = usePascalI18n()
-  const [studioTab, setStudioTab] = useState<'image' | 'video'>('image')
   const [preset, setPreset] = useState<ImageGenPreset>('exterior')
   const [aspectId, setAspectId] = useState<AspectRatioOption['id']>('16:9')
   const [variations, setVariations] = useState<1 | 2 | 3 | 4>(2)
@@ -560,51 +557,37 @@ export function HouseAgentImageStudio({
 
   return (
     <div className="flex h-full flex-col gap-3 text-xs">
-      {/* Header matching official Renders drawer */}
-      <div className="flex items-center justify-between">
-        <span className="font-semibold text-sm text-zinc-100">
-          {i18n._({ id: 'app.houseAgent.imageStudio.rendersTitle', message: 'Renders' })}
+      <header
+        className={`relative shrink-0 overflow-hidden rounded-2xl border p-4 ${studioTab === 'image' ? 'border-violet-300/20 bg-linear-to-br from-violet-500/20 via-violet-950/35 to-zinc-950' : 'border-amber-300/20 bg-linear-to-br from-amber-500/15 via-amber-950/25 to-zinc-950'}`}
+      >
+        <div
+          className="pointer-events-none absolute top-2 right-4 grid size-20 rotate-12 place-items-center rounded-3xl border border-white/10 text-white/15"
+          aria-hidden="true"
+        >
+          {studioTab === 'image' ? <ImageIcon size={34} /> : <Film size={34} />}
+        </div>
+        <span
+          className={`relative grid size-8 place-items-center rounded-lg ${studioTab === 'image' ? 'bg-violet-400/20 text-violet-200' : 'bg-amber-400/20 text-amber-200'}`}
+        >
+          {studioTab === 'image' ? <Sparkles size={16} /> : <Video size={16} />}
         </span>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={i18n._({
-            id: 'app.houseAgent.imageStudio.close',
-            message: 'Close image studio',
-          })}
-          className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
-        >
-          <X size={14} />
-        </button>
-      </div>
-
-      {/* Image | Video Segmented Tabs */}
-      <div className="grid grid-cols-2 gap-1 rounded-xl border border-white/10 bg-black/50 p-1">
-        <button
-          type="button"
-          onClick={() => setStudioTab('image')}
-          className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-medium transition-colors ${
-            studioTab === 'image'
-              ? 'border border-violet-400/35 bg-violet-600/25 text-violet-100'
-              : 'text-zinc-400 hover:text-zinc-200'
-          }`}
-        >
-          <ImageIcon size={13} />
-          {i18n._({ id: 'app.houseAgent.imageStudio.tabImage', message: 'Image' })}
-        </button>
-        <button
-          type="button"
-          onClick={() => setStudioTab('video')}
-          className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-medium transition-colors ${
-            studioTab === 'video'
-              ? 'border border-amber-400/35 bg-amber-600/20 text-amber-100'
-              : 'text-zinc-400 hover:text-zinc-200'
-          }`}
-        >
-          <Film size={13} />
-          {i18n._({ id: 'app.houseAgent.imageStudio.tabVideo', message: 'Video' })}
-        </button>
-      </div>
+        <h3 className="relative mt-2 font-semibold text-lg tracking-tight text-zinc-100">
+          {studioTab === 'image'
+            ? i18n._({ id: 'app.houseAgent.tab.studio', message: 'Image Studio' })
+            : i18n._({ id: 'app.houseAgent.imageStudio.tabVideo', message: 'Video' })}
+        </h3>
+        <p className="relative mt-1 max-w-[80%] leading-relaxed text-zinc-400">
+          {studioTab === 'image'
+            ? i18n._({
+                id: 'app.houseAgent.imageStudio.modelSubtitleImage',
+                message: 'Layout-faithful architectural image generation',
+              })
+            : i18n._({
+                id: 'app.houseAgent.imageStudio.viewportRecording',
+                message: 'Record a walkthrough of the current 3D scene.',
+              })}
+        </p>
+      </header>
 
       {/* Scrollable Studio Body */}
       <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto pr-0.5">
@@ -908,54 +891,50 @@ export function HouseAgentImageStudio({
           )}
         </section>
 
-        {/* MODEL Card */}
-        <section className="space-y-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-            {i18n._({ id: 'app.houseAgent.imageStudio.modelLabel', message: 'MODEL' })}
-          </span>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2.5 text-left hover:border-white/25"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/50 text-violet-300">
-              {studioTab === 'image' ? <Sparkles size={15} /> : <Film size={15} />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="truncate font-semibold text-xs text-zinc-100">
-                  {configured && modelLabel
-                    ? modelLabel
-                    : i18n._({
-                        id: 'app.houseAgent.imageStudio.configureBtn',
-                        message: 'Configure',
-                      })}
-                </span>
-                {configured ? (
-                  <span className="rounded bg-amber-500/20 px-1 py-0.2 font-mono text-[9px] text-amber-200">
-                    {studioTab === 'image' ? BADGE_READY : BADGE_FAST}
-                  </span>
-                ) : (
-                  <span className="rounded bg-red-500/20 px-1 py-0.2 text-[9px] text-red-200">
-                    {i18n._({ id: 'app.houseAgent.imageStudio.needKeyTag', message: 'No key' })}
-                  </span>
-                )}
+        {studioTab === 'image' && (
+          <section className="space-y-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              {i18n._({ id: 'app.houseAgent.imageStudio.modelLabel', message: 'MODEL' })}
+            </span>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/90 p-2.5 text-left hover:border-white/25"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/50 text-violet-300">
+                <Sparkles size={15} />
               </div>
-              <p className="truncate text-[10px] text-zinc-400">
-                {studioTab === 'image'
-                  ? i18n._({
-                      id: 'app.houseAgent.imageStudio.modelSubtitleImage',
-                      message: 'Layout-faithful architectural image generation',
-                    })
-                  : i18n._({
-                      id: 'app.houseAgent.imageStudio.modelSubtitleVideo',
-                      message: 'Start + end frame motion interpolation',
-                    })}
-              </p>
-            </div>
-            <ChevronDown size={14} className="shrink-0 text-zinc-400" />
-          </button>
-        </section>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate font-semibold text-xs text-zinc-100">
+                    {configured && modelLabel
+                      ? modelLabel
+                      : i18n._({
+                          id: 'app.houseAgent.imageStudio.configureBtn',
+                          message: 'Configure',
+                        })}
+                  </span>
+                  {configured ? (
+                    <span className="rounded bg-amber-500/20 px-1 py-0.2 font-mono text-[9px] text-amber-200">
+                      {BADGE_READY}
+                    </span>
+                  ) : (
+                    <span className="rounded bg-red-500/20 px-1 py-0.2 text-[9px] text-red-200">
+                      {i18n._({ id: 'app.houseAgent.imageStudio.needKeyTag', message: 'No key' })}
+                    </span>
+                  )}
+                </div>
+                <p className="truncate text-[10px] text-zinc-400">
+                  {i18n._({
+                    id: 'app.houseAgent.imageStudio.modelSubtitleImage',
+                    message: 'Layout-faithful architectural image generation',
+                  })}
+                </p>
+              </div>
+              <ChevronDown size={14} className="shrink-0 text-zinc-400" />
+            </button>
+          </section>
+        )}
 
         {studioTab === 'image' ? (
           <>
@@ -1558,7 +1537,7 @@ export function HouseAgentImageStudio({
               type="button"
               disabled={!configured}
               onClick={() => void handleGenerateImages()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-2.5 text-xs font-semibold text-white shadow-lg hover:bg-violet-500 disabled:opacity-40"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-xs font-semibold text-white shadow-lg shadow-violet-950/50 transition-all hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40"
             >
               {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
               {i18n._({
@@ -1585,7 +1564,7 @@ export function HouseAgentImageStudio({
           <button
             type="button"
             onClick={() => void handleRecord3DVideo()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-2.5 text-xs font-semibold text-white shadow-lg hover:bg-amber-500"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-semibold text-white shadow-lg shadow-amber-950/50 transition-all hover:from-amber-400 hover:to-orange-400"
           >
             <Video size={14} />
             {i18n._({
@@ -1597,7 +1576,7 @@ export function HouseAgentImageStudio({
         )}
 
         <p className="flex items-center justify-between text-[10px] text-zinc-500">
-          <span className="truncate font-mono">{modelLabel || '—'}</span>
+          <span className="truncate font-mono">{studioTab === 'image' ? modelLabel : ''}</span>
           <span className="shrink-0 font-mono">
             {studioTab === 'image'
               ? `${variations} × ${resolutionTier} · ${aspectId}`

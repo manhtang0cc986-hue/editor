@@ -95,12 +95,20 @@ export function HouseAgentStarters({
   ]
   return (
     <div className="space-y-4 text-xs text-zinc-300">
-      <div className="space-y-2">
-        <DraftingCompass className="size-7 text-sky-300" />
-        <h3 className="font-semibold text-xl tracking-tight text-white">
+      <div className="relative isolate overflow-hidden rounded-2xl border border-sky-300/15 bg-linear-to-br from-sky-500/15 via-sky-950/30 to-zinc-950 p-4">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-3 right-5 -z-10 grid size-20 rotate-12 place-items-center rounded-3xl border border-white/10 text-sky-200/15"
+        >
+          <DraftingCompass size={36} strokeWidth={1} />
+        </div>
+        <span className="grid size-8 place-items-center rounded-lg bg-sky-400/15 text-sky-200">
+          <DraftingCompass size={17} />
+        </span>
+        <h3 className="mt-2 font-semibold text-xl tracking-tight text-white">
           {i18n._({ id: 'app.houseAgent.starters.heading', message: 'Start a building plan' })}
         </h3>
-        <p className="leading-5 text-zinc-400">
+        <p className="mt-1 max-w-[85%] leading-5 text-zinc-400">
           {i18n._({
             id: 'app.houseAgent.starters.description',
             message: 'Use a reference, attach a floor plan, or describe what you want to build.',

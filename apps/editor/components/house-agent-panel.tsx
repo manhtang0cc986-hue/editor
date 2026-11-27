@@ -9,6 +9,8 @@ import {
   Brain,
   Camera,
   ChevronDown,
+  DraftingCompass,
+  Film,
   History,
   ImagePlus,
   Layers,
@@ -242,7 +244,7 @@ export function HouseAgentPanel({
   const [open, setOpen] = useState(embedded)
   const [showSettings, setShowSettings] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
-  const [workspaceTab, setWorkspaceTab] = useState<'build' | 'studio'>('build')
+  const [workspaceTab, setWorkspaceTab] = useState<'build' | 'image' | 'video'>('build')
   const [showArchitectPopover, setShowArchitectPopover] = useState(false)
   const [pickerTab, setPickerTab] = useState<HouseAgentModelTab>('architect')
   const [config, setConfig] = useState<AgentConfiguration | null>(null)
@@ -965,31 +967,42 @@ export function HouseAgentPanel({
             : 'absolute top-16 right-3 bottom-4 z-50 flex w-[440px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-zinc-950 text-zinc-100 shadow-2xl'
         }
       >
-        <header className="flex items-center justify-between gap-2 border-white/10 border-b px-3 py-2.5">
-          <div className="grid grid-cols-2 gap-0.5 rounded-xl bg-black/50 p-0.5">
-            <button
-              type="button"
-              onClick={() => setWorkspaceTab('build')}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                workspaceTab === 'build'
-                  ? 'bg-white/15 text-white'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {i18n._({ id: 'app.houseAgent.tab.build', message: 'Design & Build' })}
-            </button>
-            <button
-              type="button"
-              onClick={() => setWorkspaceTab('studio')}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                workspaceTab === 'studio'
-                  ? 'bg-white/15 text-white'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {i18n._({ id: 'app.houseAgent.tab.studio', message: 'Image Studio' })}
-            </button>
-          </div>
+        <header className="flex flex-wrap items-center justify-between gap-2 border-white/10 border-b bg-zinc-950/40 px-3 py-2.5">
+          <nav className="flex min-w-0 items-center gap-0.5 rounded-xl border border-white/8 bg-black/30 p-0.5">
+            {(
+              [
+                {
+                  id: 'build',
+                  icon: DraftingCompass,
+                  label: i18n._({ id: 'app.houseAgent.tab.build', message: 'Design & Build' }),
+                  active: 'bg-sky-400/15 text-sky-100',
+                },
+                {
+                  id: 'image',
+                  icon: ImagePlus,
+                  label: i18n._({ id: 'app.houseAgent.imageStudio.tabImage', message: 'Image' }),
+                  active: 'bg-violet-400/15 text-violet-100',
+                },
+                {
+                  id: 'video',
+                  icon: Film,
+                  label: i18n._({ id: 'app.houseAgent.imageStudio.tabVideo', message: 'Video' }),
+                  active: 'bg-amber-400/15 text-amber-100',
+                },
+              ] as const
+            ).map(({ id, icon: Icon, label, active }) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={workspaceTab === id}
+                onClick={() => setWorkspaceTab(id)}
+                className={`flex min-w-0 items-center gap-1 rounded-lg px-2 py-1.5 font-medium text-[11px] whitespace-nowrap transition-colors ${workspaceTab === id ? active : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'}`}
+              >
+                <Icon size={12} className="shrink-0" />
+                <span className="truncate">{label}</span>
+              </button>
+            ))}
+          </nav>
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -1459,9 +1472,10 @@ export function HouseAgentPanel({
           </div>
         )}
 
-        {workspaceTab === 'studio' ? (
-          <div className="min-h-0 flex-1 overflow-y-auto p-3.5">
+        {workspaceTab !== 'build' ? (
+          <div className="min-h-0 flex-1 p-3.5">
             <HouseAgentImageStudio
+              studioTab={workspaceTab}
               configured={effectiveImageConfigured}
               modelLabel={effectiveImageModelLabel}
               imageConfig={imageRuntimeOverride}
@@ -1483,7 +1497,6 @@ export function HouseAgentPanel({
                 )
                 setWorkspaceTab('build')
               }}
-              onClose={() => setWorkspaceTab('build')}
             />
           </div>
         ) : (
@@ -1503,7 +1516,7 @@ export function HouseAgentPanel({
                     setDraft((previous) => (previous.trim() ? `${previous}\n\n${prompt}` : prompt))
                     composer.current?.focus()
                   }}
-                  onOpenStudio={() => setWorkspaceTab('studio')}
+                  onOpenStudio={() => setWorkspaceTab('image')}
                   onChoosePlan={() => fileInput.current?.click()}
                   onBuildTemplate={() => void runAutoVilla()}
                 />
@@ -1641,7 +1654,7 @@ export function HouseAgentPanel({
               )}
             </div>
 
-            <div className="space-y-2.5 border-white/10 border-t p-3.5">
+            <div className="shrink-0 space-y-2 border-white/10 border-t bg-zinc-950/55 px-3 py-3">
               {(selection.selectedIds.length > 0 || selection.zoneId) && (
                 <div className="flex items-center gap-2 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2 py-1.5 text-[11px] text-sky-200">
                   <Layers size={13} />
@@ -1723,7 +1736,7 @@ export function HouseAgentPanel({
 
               <div
                 ref={modelPicker}
-                className="relative rounded-2xl border border-white/15 bg-zinc-900/90 p-2.5 focus-within:border-sky-500/70"
+                className="relative rounded-2xl border border-white/12 bg-linear-to-br from-sky-400/[0.07] to-zinc-900 px-2.5 py-2.5 shadow-lg shadow-black/20 transition-colors focus-within:border-sky-400/55"
               >
                 {showArchitectPopover && (
                   <HouseAgentArchitectPopover
@@ -1753,6 +1766,61 @@ export function HouseAgentPanel({
                     }}
                   />
                 )}
+                <div className="mb-2 flex min-w-0 items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      setPreferredMode((prev) => (prev === 'build' ? 'plan' : 'build'))
+                    }
+                    title={i18n._({
+                      id: 'app.houseAgent.mode.toggleHint',
+                      message: 'Switch between Plan only and Direct 3D Build',
+                    })}
+                    className={`flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 font-medium text-[11px] whitespace-nowrap transition-colors disabled:opacity-45 ${preferredMode === 'build' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20' : 'border-sky-400/25 bg-sky-400/10 text-sky-200 hover:bg-sky-400/20'}`}
+                  >
+                    <DraftingCompass size={12} />
+                    {preferredMode === 'build'
+                      ? i18n._({ id: 'app.houseAgent.mode.buildLabel', message: 'Build' })
+                      : i18n._({ id: 'app.houseAgent.mode.planLabel', message: 'Plan' })}
+                  </button>
+                  <button
+                    ref={modelTrigger}
+                    type="button"
+                    aria-expanded={showArchitectPopover}
+                    disabled={busy}
+                    onClick={() => {
+                      if (!showArchitectPopover) setPickerTab(modelTab)
+                      setShowArchitectPopover(!showArchitectPopover)
+                    }}
+                    className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-[11px] text-zinc-200 hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {modelTab === 'models' && effectiveModelLabel && (
+                      <HouseAgentModelLogo
+                        modelId={effectiveModelLabel}
+                        owner={chosenModel?.ownedBy}
+                        compact
+                      />
+                    )}
+                    <span className="min-w-0 truncate font-medium">
+                      {modelTab === 'models' && effectiveModelLabel
+                        ? effectiveModelLabel
+                        : i18n._({
+                            id: 'app.houseAgent.architect.pillLabel',
+                            message: 'Architect',
+                          })}
+                    </span>
+                    <span className="min-w-0 truncate whitespace-nowrap text-zinc-400">
+                      {modelTab === 'architect'
+                        ? modelLabels.profile[buildProfile]
+                        : modelLabels.effort[reasoningEffort]}
+                    </span>
+                    <ChevronDown
+                      size={11}
+                      className="min-w-0 truncate whitespace-nowrap text-zinc-400"
+                    />
+                  </button>
+                </div>
                 <textarea
                   ref={composer}
                   value={draft}
@@ -1766,7 +1834,7 @@ export function HouseAgentPanel({
                     event.preventDefault()
                     if (draft.trim() || images.length) void send(preferredMode)
                   }}
-                  className="min-h-14 w-full resize-none bg-transparent text-xs text-zinc-100 outline-none placeholder:text-zinc-500"
+                  className="min-h-16 w-full resize-none bg-transparent px-1 text-[13px] leading-5 text-zinc-100 outline-none placeholder:text-zinc-500"
                   placeholder={i18n._({
                     id: 'app.houseAgent.placeholder',
                     message:
@@ -1774,7 +1842,7 @@ export function HouseAgentPanel({
                   })}
                 />
 
-                <div className="mt-1.5 flex items-center gap-1">
+                <div className="mt-1 flex items-center gap-1 border-white/8 border-t pt-2">
                   <label
                     className="cursor-pointer rounded-lg p-1.5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
                     title={i18n._({
@@ -1843,7 +1911,7 @@ export function HouseAgentPanel({
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => setWorkspaceTab('studio')}
+                    onClick={() => setWorkspaceTab('image')}
                     title={i18n._({
                       id: 'app.houseAgent.openImageStudio',
                       message: 'Design Image Studio (generate renderings & blueprints)',
@@ -1858,61 +1926,6 @@ export function HouseAgentPanel({
                   </button>
 
                   <div className="relative ml-auto flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() =>
-                        setPreferredMode((prev) => (prev === 'build' ? 'plan' : 'build'))
-                      }
-                      title={i18n._({
-                        id: 'app.houseAgent.mode.toggleHint',
-                        message: 'Switch between Plan only and Direct 3D Build',
-                      })}
-                      className={`rounded-full border px-2 py-1 text-[10px] font-medium transition-colors ${
-                        preferredMode === 'build'
-                          ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25'
-                          : 'border-sky-500/40 bg-sky-500/15 text-sky-200 hover:bg-sky-500/25'
-                      }`}
-                    >
-                      {preferredMode === 'build'
-                        ? i18n._({ id: 'app.houseAgent.mode.buildLabel', message: 'Build' })
-                        : i18n._({ id: 'app.houseAgent.mode.planLabel', message: 'Plan' })}
-                    </button>
-
-                    <button
-                      ref={modelTrigger}
-                      type="button"
-                      aria-expanded={showArchitectPopover}
-                      disabled={busy}
-                      onClick={() => {
-                        if (!showArchitectPopover) setPickerTab(modelTab)
-                        setShowArchitectPopover(!showArchitectPopover)
-                      }}
-                      className="inline-flex min-w-0 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-200 hover:bg-white/10 disabled:opacity-50"
-                    >
-                      {modelTab === 'models' && effectiveModelLabel && (
-                        <HouseAgentModelLogo
-                          modelId={effectiveModelLabel}
-                          owner={chosenModel?.ownedBy}
-                          compact
-                        />
-                      )}
-                      <span className="max-w-24 truncate font-medium">
-                        {modelTab === 'models' && effectiveModelLabel
-                          ? effectiveModelLabel
-                          : i18n._({
-                              id: 'app.houseAgent.architect.pillLabel',
-                              message: 'Architect',
-                            })}
-                      </span>
-                      <span className="shrink-0 text-zinc-400">
-                        {modelTab === 'architect'
-                          ? modelLabels.profile[buildProfile]
-                          : modelLabels.effort[reasoningEffort]}
-                      </span>
-                      <ChevronDown size={11} className="shrink-0 text-zinc-400" />
-                    </button>
-
                     {busy ? (
                       <button
                         type="button"
@@ -1946,7 +1959,7 @@ export function HouseAgentPanel({
                               })
                             : i18n._({ id: 'app.houseAgent.plan', message: 'Analyze & plan' })
                         }
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-black transition-opacity hover:bg-zinc-200 disabled:opacity-30"
+                        className="grid size-8 place-items-center rounded-xl bg-sky-300 text-sky-950 shadow-md shadow-sky-900/30 transition-colors hover:bg-sky-200 disabled:bg-white/8 disabled:text-zinc-500 disabled:shadow-none"
                       >
                         <ArrowUp size={14} />
                       </button>
