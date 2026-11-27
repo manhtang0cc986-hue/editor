@@ -1,18 +1,18 @@
 'use client'
 
+import { usePascalI18n } from '@pascal-app/core'
 import { Bounds } from '@react-three/drei/core/Bounds'
 import { useGLTF } from '@react-three/drei/core/Gltf'
 import { OrbitControls } from '@react-three/drei/core/OrbitControls'
 import { Canvas } from '@react-three/fiber'
-import { Component, type ReactNode, Suspense, useEffect, useMemo, useState } from 'react'
+import { Component, type ReactNode, Suspense, useEffect, useMemo } from 'react'
 import { Box3, Vector3 } from 'three'
-import { canCreateWebGLPreviewContext } from '@/lib/webgl-preview'
 
 type Vector = [number, number, number]
 export type ModelBounds = { dimensions: Vector; offset: Vector }
 
 class PreviewBoundary extends Component<
-  { children: ReactNode; onError: () => void },
+  { children: ReactNode; onError?: () => void; fallback?: ReactNode },
   { failed: boolean }
 > {
   state = { failed: false }
@@ -20,14 +20,15 @@ class PreviewBoundary extends Component<
     return { failed: true }
   }
   componentDidCatch() {
-    this.props.onError()
+    this.props.onError?.()
   }
   render() {
-    return this.state.failed ? null : this.props.children
+    return this.state.failed ? this.props.fallback : this.props.children
   }
 }
 
 function PreviewScene({ url, onBounds }: { url: string; onBounds: (bounds: ModelBounds) => void }) {
+  const i18n = usePascalI18n()
   const { scene } = useGLTF(url, false)
   const bounds = useMemo(() => {
     const box = new Box3().setFromObject(scene)
@@ -43,7 +44,23 @@ function PreviewScene({ url, onBounds }: { url: string; onBounds: (bounds: Model
   }, [scene])
 
   useEffect(() => onBounds(bounds), [bounds, onBounds])
-  return <primitive object={scene} />
+  const fallback = (
+    <p className="p-3 text-muted-foreground">
+      {i18n._({ id: 'app.modelAssets.previewUnavailable', message: '3D preview unavailable.' })}
+    </p>
+  )
+  return (
+    <PreviewBoundary fallback={fallback}>
+      <Canvas camera={{ position: [3, 2, 4], fov: 38 }} dpr={[1, 1.5]} fallback={fallback}>
+        <ambientLight intensity={1.2} />
+        <directionalLight position={[4, 7, 5]} intensity={2} />
+        <OrbitControls makeDefault />
+        <Bounds fit clip observe margin={1.25}>
+          <primitive object={scene} />
+        </Bounds>
+      </Canvas>
+    </PreviewBoundary>
+  )
 }
 
 export function ModelAssetPreview({
@@ -55,37 +72,14 @@ export function ModelAssetPreview({
   onBounds: (bounds: ModelBounds) => void
   onError: () => void
 }) {
-  const [webglReady, setWebglReady] = useState<boolean | null>(null)
-
   useEffect(() => () => useGLTF.clear(url), [url])
-
-  useEffect(() => {
-    if (!url) return
-    const supported = canCreateWebGLPreviewContext()
-    setWebglReady(supported)
-    if (!supported) {
-      onError()
-    }
-  }, [onError, url])
-
-  if (webglReady === false) return null
-  if (webglReady === null) {
-    return <div className="h-48 overflow-hidden rounded-lg border border-border bg-background" />
-  }
 
   return (
     <div className="h-48 overflow-hidden rounded-lg border border-border bg-background">
       <PreviewBoundary key={url} onError={onError}>
-        <Canvas camera={{ position: [3, 2, 4], fov: 38 }} dpr={[1, 1.5]}>
-          <ambientLight intensity={1.2} />
-          <directionalLight position={[4, 7, 5]} intensity={2} />
-          <OrbitControls makeDefault />
-          <Suspense fallback={null}>
-            <Bounds fit clip observe margin={1.25}>
-              <PreviewScene url={url} onBounds={onBounds} />
-            </Bounds>
-          </Suspense>
-        </Canvas>
+        <Suspense fallback={null}>
+          <PreviewScene url={url} onBounds={onBounds} />
+        </Suspense>
       </PreviewBoundary>
     </div>
   )
