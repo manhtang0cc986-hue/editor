@@ -2,7 +2,7 @@
 
 import { type AssetInput, artifactHash, usePascalI18n } from '@pascal-app/core'
 import { activateCatalogItem, ItemsPanel } from '@pascal-app/editor'
-import { Box, Sparkles, Upload } from 'lucide-react'
+import { ArrowUpRight, Box, ImagePlus, RefreshCw, Sparkles, Type, Upload } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -24,7 +24,11 @@ type Job = { taskId: string; stage: 'preview' | 'refine' | 'image' }
 const JOB_KEY = 'pascal.meshy.job'
 const input = 'w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm'
 const button =
-  'rounded-md border border-border px-2 py-1.5 text-sm hover:bg-accent disabled:opacity-45'
+  'inline-flex min-h-8 items-center justify-center gap-2 rounded-lg border border-border px-2.5 py-1.5 font-medium text-xs transition-colors hover:bg-accent disabled:opacity-45'
+const primaryButton =
+  'flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 py-2.5 font-semibold text-sm text-white shadow-sm transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none'
+const sourceButton =
+  'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 font-medium text-xs text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-background aria-pressed:text-foreground aria-pressed:shadow-sm'
 
 function pendingJob(): Job | null {
   try {
@@ -77,11 +81,11 @@ export function ModelAssetsPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex gap-2 border-b border-border p-2">
+      <div className="flex gap-1 border-b border-border px-3 py-2">
         <button
           type="button"
           aria-pressed={tab === 'library'}
-          className={`${button} aria-pressed:bg-accent`}
+          className={`${sourceButton} aria-pressed:bg-accent aria-pressed:shadow-none`}
           onClick={() => setTab('library')}
         >
           {i18n._({ id: 'app.modelAssets.catalog', message: 'Catalog' })}
@@ -89,7 +93,7 @@ export function ModelAssetsPanel() {
         <button
           type="button"
           aria-pressed={tab === 'mine'}
-          className={`${button} aria-pressed:bg-accent`}
+          className={`${sourceButton} aria-pressed:bg-accent aria-pressed:shadow-none`}
           onClick={() => setTab('mine')}
         >
           {i18n._({ id: 'app.modelAssets.mine', message: 'My models' })}
@@ -108,7 +112,9 @@ function PersonalModels() {
   const [assets, setAssets] = useState<AssetInput[]>([])
   const [configured, setConfigured] = useState<boolean | null>(null)
   const [prompt, setPrompt] = useState('')
+  const [source, setSource] = useState<'image' | 'text'>('image')
   const [reference, setReference] = useState<File | null>(null)
+  const [referenceUrl, setReferenceUrl] = useState('')
   const [upload, setUpload] = useState<Blob | null>(null)
   const [name, setName] = useState('')
   const [category, setCategory] = useState<ModelAssetForm['category']>('furniture')
@@ -158,6 +164,16 @@ function PersonalModels() {
       startRequest.current?.abort()
     }
   }, [checkConfiguration])
+
+  useEffect(() => {
+    if (!reference) {
+      setReferenceUrl('')
+      return
+    }
+    const url = URL.createObjectURL(reference)
+    setReferenceUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [reference])
 
   useEffect(() => {
     if (!upload) return
@@ -220,6 +236,8 @@ function PersonalModels() {
 
   async function startGeneration() {
     if (!configured || job || startRequest.current) return
+    const image = source === 'image' ? reference : null
+    if (source === 'image' ? !image : !prompt.trim()) return
     const controller = new AbortController()
     startRequest.current = controller
     setBusy(true)
@@ -227,13 +245,13 @@ function PersonalModels() {
     setPaused(false)
     setProgress(0)
     try {
-      const action = reference
-        ? { action: 'create-image', image: await readReference(reference) }
+      const action = image
+        ? { action: 'create-image', image: await readReference(image) }
         : { action: 'create-text', prompt: prompt.trim() }
       const response = await generate(action, controller.signal)
       const { taskId } = await response.json()
-      rememberJob({ taskId, stage: reference ? 'image' : 'preview' })
-      setName(prompt.trim().slice(0, 100))
+      rememberJob({ taskId, stage: image ? 'image' : 'preview' })
+      setName((image ? image.name.replace(/\.[^.]+$/, '') : prompt.trim()).slice(0, 100))
     } catch (error) {
       if (!controller.signal.aborted)
         setError(error instanceof Error ? error.message : String(error))
@@ -314,116 +332,201 @@ function PersonalModels() {
   const generating = job !== null
 
   return (
-    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 text-sm">
-      <div className="space-y-2 rounded-lg border border-border p-2.5">
-        <h3 className="flex items-center gap-2 font-medium">
-          <Sparkles size={15} /> Meshy
-        </h3>
-        <label className="block">
-          {i18n._({ id: 'app.modelAssets.reference', message: 'Or choose a reference image' })}
-          <input
-            type="file"
-            className="block w-full text-xs"
-            accept="image/png,image/jpeg,image/webp"
-            disabled={generating || busy}
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0]
-              event.currentTarget.value = ''
-              if (!file) return
-              setError('')
-              if (
-                file.size > MAX_REFERENCE_BYTES ||
-                !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
-              ) {
-                setError('Choose a PNG, JPEG or WebP image smaller than 5 MB.')
-                return
-              }
-              setReference(file)
-            }}
-          />
-        </label>
-        {reference && (
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="truncate">{reference.name}</span>
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 text-sm">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <header className="flex items-center gap-3 border-border border-b bg-linear-to-br from-indigo-500/15 via-indigo-500/5 to-transparent p-3.5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-indigo-500/15 text-indigo-500 dark:text-indigo-300">
+            <Box size={19} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold leading-tight text-foreground">
+              {i18n._({ id: 'app.modelAssets.studio', message: '3D Model Studio' })}
+            </h3>
+            <span className="text-muted-foreground text-xs">Meshy</span>
+          </div>
+          {configured !== null && (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/70 px-2 py-1 font-medium text-[10px] text-muted-foreground">
+              <span
+                className={`size-1.5 rounded-full ${configured ? 'bg-emerald-500' : 'bg-amber-400'}`}
+              />
+              {configured
+                ? i18n._({ id: 'app.modelAssets.connected', message: 'Configured' })
+                : i18n._({ id: 'app.modelAssets.notConnected', message: 'Setup needed' })}
+            </span>
+          )}
+        </header>
+        <div className="space-y-3 p-3.5">
+          <div className="flex gap-1 rounded-xl bg-muted p-1">
             <button
               type="button"
-              className={button}
+              aria-pressed={source === 'image'}
+              className={sourceButton}
               disabled={generating || busy}
-              onClick={() => setReference(null)}
+              onClick={() => setSource('image')}
             >
-              {i18n._({ id: 'app.houseAgent.removeImage', message: 'Remove image' })}
+              <ImagePlus size={14} />
+              {i18n._({ id: 'app.modelAssets.imageMode', message: 'Image to 3D' })}
+            </button>
+            <button
+              type="button"
+              aria-pressed={source === 'text'}
+              className={sourceButton}
+              disabled={generating || busy}
+              onClick={() => setSource('text')}
+            >
+              <Type size={14} />
+              {i18n._({ id: 'app.modelAssets.textMode', message: 'Text to 3D' })}
             </button>
           </div>
-        )}
-        {!reference && (
-          <label className="block">
-            {i18n._({ id: 'app.modelAssets.prompt', message: 'Describe a 3D model' })}
-            <textarea
-              className={input}
-              rows={2}
-              maxLength={500}
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              disabled={generating || busy}
-            />
-          </label>
-        )}
-        <button
-          type="button"
-          className={button}
-          disabled={
-            !configured || busy || generating || Boolean(upload) || (!prompt.trim() && !reference)
-          }
-          onClick={() => void startGeneration()}
-        >
-          {i18n._({ id: 'app.modelAssets.generate', message: 'Generate 3D model' })}
-        </button>
-        {configured !== true && (
-          <div className="space-y-1">
-            {configured === false && (
-              <p className="text-muted-foreground">
+          {source === 'image' ? (
+            <div className="relative">
+              <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-indigo-500/35 border-dashed bg-indigo-500/5 px-3 py-4 text-center transition-colors hover:bg-indigo-500/10 focus-within:ring-2 focus-within:ring-indigo-500/50">
+                {reference && referenceUrl ? (
+                  <>
+                    <img
+                      src={referenceUrl}
+                      alt=""
+                      className="h-16 w-full rounded-md object-contain"
+                    />
+                    <span className="max-w-full truncate px-5 font-medium text-xs">
+                      {reference.name}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="grid size-8 place-items-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
+                      <ImagePlus size={16} />
+                    </span>
+                    <span className="font-medium text-xs">
+                      {i18n._({
+                        id: 'app.modelAssets.reference',
+                        message: 'Or choose a reference image',
+                      })}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {i18n._({
+                        id: 'app.modelAssets.imageFormats',
+                        message: 'PNG, JPG or WebP · up to 5 MB',
+                      })}
+                    </span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  className="sr-only"
+                  aria-label={i18n._({
+                    id: 'app.modelAssets.reference',
+                    message: 'Or choose a reference image',
+                  })}
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={generating || busy}
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0]
+                    event.currentTarget.value = ''
+                    if (!file) return
+                    setError('')
+                    if (
+                      file.size > MAX_REFERENCE_BYTES ||
+                      !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
+                    ) {
+                      setError('Choose a PNG, JPEG or WebP image smaller than 5 MB.')
+                      return
+                    }
+                    setReference(file)
+                  }}
+                />
+              </label>
+              {reference && (
+                <button
+                  type="button"
+                  className={`${button} absolute top-2 right-2 bg-background`}
+                  disabled={generating || busy}
+                  onClick={() => setReference(null)}
+                >
+                  {i18n._({ id: 'app.houseAgent.removeImage', message: 'Remove image' })}
+                </button>
+              )}
+            </div>
+          ) : (
+            <label className="block space-y-1.5 text-xs">
+              <span className="font-medium">
+                {i18n._({ id: 'app.modelAssets.prompt', message: 'Describe a 3D model' })}
+              </span>
+              <textarea
+                className={`${input} min-h-28 resize-y rounded-xl focus-visible:border-indigo-500 focus-visible:outline-none`}
+                rows={3}
+                maxLength={500}
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                disabled={generating || busy}
+              />
+            </label>
+          )}
+          <button
+            type="button"
+            className={primaryButton}
+            disabled={
+              !configured ||
+              busy ||
+              generating ||
+              Boolean(upload) ||
+              (source === 'image' ? !reference : !prompt.trim())
+            }
+            onClick={() => void startGeneration()}
+          >
+            <Sparkles size={15} />
+            {i18n._({ id: 'app.modelAssets.generate', message: 'Generate 3D model' })}
+          </button>
+          {configured !== true && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/7 p-2.5">
+              <div className="min-w-0 flex-1 text-xs text-muted-foreground">
                 {i18n._({
                   id: 'app.modelAssets.configure',
                   message: 'Set MESHY_API_KEY in .env.local to enable generation.',
                 })}
-              </p>
-            )}
-            <button
-              type="button"
-              className={button}
-              onClick={() => {
-                setError('')
-                void checkConfiguration()
-              }}
-            >
-              {i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
-            </button>
-          </div>
-        )}
-        {job && (
-          <div className="space-y-1" aria-live="polite">
-            <p>
-              {job.stage === 'refine'
-                ? i18n._({ id: 'app.modelAssets.texturing', message: 'Adding textures' })
-                : i18n._({ id: 'app.modelAssets.generating', message: 'Generating model' })}
-            </p>
-            <progress className="w-full" max={100} value={progress} />
-            {paused && (
+              </div>
               <button
                 type="button"
-                className={button}
+                className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
+                aria-label={i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
+                title={i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
                 onClick={() => {
                   setError('')
-                  setPaused(false)
+                  void checkConfiguration()
                 }}
               >
-                {i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
+                <RefreshCw size={13} />
               </button>
-            )}
-          </div>
-        )}
-      </div>
-      <label className="flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border px-2 py-1.5 hover:bg-accent">
+            </div>
+          )}
+          {job && (
+            <div
+              className="space-y-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-2.5 text-xs"
+              aria-live="polite"
+            >
+              <p>
+                {job.stage === 'refine'
+                  ? i18n._({ id: 'app.modelAssets.texturing', message: 'Adding textures' })
+                  : i18n._({ id: 'app.modelAssets.generating', message: 'Generating model' })}
+              </p>
+              <progress className="h-1.5 w-full accent-indigo-500" max={100} value={progress} />
+              {paused && (
+                <button
+                  type="button"
+                  className={button}
+                  onClick={() => {
+                    setError('')
+                    setPaused(false)
+                  }}
+                >
+                  {i18n._({ id: 'app.modelAssets.retry', message: 'Check again' })}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+      <label className="flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-medium text-xs transition-colors hover:bg-accent focus-within:ring-2 focus-within:ring-indigo-500/50">
         <Upload size={15} />
         {i18n._({ id: 'app.modelAssets.upload', message: 'Upload GLB' })}
         <input
@@ -447,7 +550,7 @@ function PersonalModels() {
         <ModelAssetPreview url={activePreview} onBounds={receiveBounds} onError={onPreviewError} />
       )}
       {upload && (
-        <div className="space-y-2">
+        <div className="space-y-3 rounded-xl border border-border bg-card p-3">
           <label className="block">
             {i18n._({ id: 'app.modelAssets.name', message: 'Name' })}
             <input
@@ -506,22 +609,23 @@ function PersonalModels() {
         </div>
       )}
       {!upload && savedPreview && (
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate">{savedPreview.name}</span>
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-2.5">
+          <span className="truncate text-xs font-medium">{savedPreview.name}</span>
           <button
             type="button"
             className={button}
             onClick={() => activateCatalogItem(savedPreview)}
           >
             {i18n._({ id: 'app.modelAssets.place', message: 'Place' })}
+            <ArrowUpRight size={13} />
           </button>
         </div>
       )}
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {assets.map((asset) => (
           <li
             key={asset.id}
-            className="flex items-center gap-1 rounded-md border border-border p-1"
+            className="flex items-center gap-2 rounded-xl border border-border bg-card p-1.5"
           >
             <button
               type="button"
@@ -532,7 +636,9 @@ function PersonalModels() {
                 setSavedPreview(asset)
               }}
             >
-              <Box size={14} className="shrink-0" />
+              <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                <Box size={14} />
+              </span>
               <span className="truncate">{asset.name}</span>
             </button>
             <button type="button" className={button} onClick={() => activateCatalogItem(asset)}>
