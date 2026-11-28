@@ -348,10 +348,6 @@ msgid "app.houseAgent.imageStudio.chatAttachPrefix"
 msgstr "Please study this generated architectural design image, analyze its layout, massing, materials, and proportions, and plan/build the 3D house:"
 
 #: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.close"
-msgstr "Close image studio"
-
-#: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.download"
 msgstr "Download"
 
@@ -424,10 +420,6 @@ msgid "app.houseAgent.imageStudio.modelSubtitleImage"
 msgstr "Layout-faithful architectural image generation"
 
 #: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.modelSubtitleVideo"
-msgstr "Start + end frame motion interpolation"
-
-#: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.noLevel"
 msgstr "Create or select a building level first before importing a guide."
 
@@ -484,10 +476,6 @@ msgid "app.houseAgent.imageStudio.removeRef"
 msgstr "Remove reference image"
 
 #: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.rendersTitle"
-msgstr "Renders"
-
-#: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.resolutionLabel"
 msgstr "RESOLUTION"
 
@@ -539,11 +527,12 @@ msgstr "interior photo"
 msgid "app.houseAgent.imageStudio.style.photorealistic"
 msgstr "photorealistic"
 
-#: apps/editor/components/house-agent-image-studio.tsx
+#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.imageStudio.tabImage"
 msgstr "Image"
 
 #: apps/editor/components/house-agent-image-studio.tsx
+#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.imageStudio.tabVideo"
 msgstr "Video"
 
@@ -646,6 +635,10 @@ msgstr "Start frame"
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.video.stopRecording"
 msgstr "Stop recording ({elapsed}s / {total}s)"
+
+#: apps/editor/components/house-agent-image-studio.tsx
+msgid "app.houseAgent.imageStudio.viewportRecording"
+msgstr "Record a walkthrough of the current 3D scene."
 
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.mode.buildLabel"
@@ -804,6 +797,8 @@ msgstr "Measured"
 msgid "app.houseAgent.plan.source.proposed"
 msgstr "Proposed"
 
+#: apps/editor/components/house-agent-architect-popover.tsx
+#: apps/editor/components/house-agent-panel.tsx
 #: apps/editor/components/house-agent-plan-card.tsx
 msgid "app.houseAgent.plan.stepsTitle"
 msgstr "Construction sequence"
@@ -818,7 +813,7 @@ msgstr "Unit"
 
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.privacy"
-msgstr "Messages and images are sent to your configured model when you send. This conversation lasts until the page is reloaded."
+msgstr "Messages and images are sent to your configured model when you send. Completed conversations are saved in this browser for this project."
 
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.reasoningTitle"
@@ -829,6 +824,7 @@ msgid "app.houseAgent.refineBuild"
 msgstr "Send & update build"
 
 #: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-assets-panel.tsx
 msgid "app.houseAgent.removeImage"
 msgstr "Remove image"
 
@@ -976,7 +972,7 @@ msgstr "Thinking & streaming…"
 msgid "app.houseAgent.tab.build"
 msgstr "Design & Build"
 
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.tab.studio"
 msgstr "Image Studio"
 
@@ -1279,6 +1275,198 @@ msgstr "Shed"
 #: apps/editor/lib/build-tab-state.ts
 msgid "app.lib.buildTabState.wall"
 msgstr "Wall"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.categories"
+msgstr "Model categories"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.chatEndpoint"
+msgstr "Chat Completions"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.close"
+msgstr "Close API configuration"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.connection"
+msgstr "Connection"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.credits"
+msgstr "{credits} Meshy credits"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.diagnosticHint"
+msgstr "Find model IDs or test the provider with a read-only request."
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.diagnostics"
+msgstr "Model discovery and testing"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.duration"
+msgstr "{durationMs} ms"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.entry"
+msgstr "Chat, image, video and 3D models"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.httpStatus"
+msgstr "HTTP {status}"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.imagesEndpoint"
+msgstr "Images API"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.key"
+msgstr "API Key"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.keyMissing"
+msgstr "Key required"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.keySaved"
+msgstr "Key saved"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.loading"
+msgstr "Waiting for response…"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.meshDiagnosticHint"
+msgstr "Verifies your Meshy key and remaining credits."
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.modelNotListed"
+msgstr "The request succeeded. The selected model is not in the returned catalog."
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.noModelMatches"
+msgstr "No models match your search."
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.noModels"
+msgstr "No models were returned for this category."
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.save"
+msgstr "Save configuration"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.saved"
+msgstr "Saved to server environment."
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.searchModels"
+msgstr "Search models"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.test"
+msgstr "Test request"
+
+#: apps/editor/components/model-api-settings-dialog.tsx
+msgid "app.modelApi.workflow"
+msgstr "Check capabilities"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.catalog"
+msgstr "Catalog"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.category"
+msgstr "Category"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.connected"
+msgstr "Configured"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.discard"
+msgstr "Discard preview"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.generate"
+msgstr "Generate 3D model"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.generating"
+msgstr "Generating model"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.imageFormats"
+msgstr "PNG, JPG or WebP · up to 5 MB"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.imageMode"
+msgstr "Image to 3D"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.mine"
+msgstr "My models"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.name"
+msgstr "Name"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.notConnected"
+msgstr "Setup needed"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.place"
+msgstr "Place"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.previewFailed"
+msgstr "Could not preview this GLB."
+
+#: apps/editor/components/model-asset-preview.tsx
+msgid "app.modelAssets.previewUnavailable"
+msgstr "3D preview unavailable."
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.prompt"
+msgstr "Describe a 3D model"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.reference"
+msgstr "Or choose a reference image"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.referenceLimit"
+msgstr "Choose a PNG, JPEG or WebP image smaller than 5 MB."
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.retry"
+msgstr "Check again"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.save"
+msgstr "Save to my models"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.studio"
+msgstr "3D Model Studio"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.textMode"
+msgstr "Text to 3D"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.texturing"
+msgstr "Adding textures"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.upload"
+msgstr "Upload GLB"
+
+#: apps/editor/components/model-assets-panel.tsx
+msgid "app.modelAssets.width"
+msgstr "Model width (m)"
 
 #: apps/editor/components/scene-loader.tsx
 msgid "app.sceneLoader.anotherSessionSavedFirstRefresh"

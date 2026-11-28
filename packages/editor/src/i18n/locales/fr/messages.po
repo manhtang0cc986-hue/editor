@@ -775,14 +775,6 @@ msgstr "Impossible de capturer la vue 3D de référence."
 msgid "app.houseAgent.imageStudio.chatAttachPrefix"
 msgstr "Veuillez analyser cette image architecturale générée, étudier son agencement, ses volumes, matériaux et proportions, puis planifier ou construire la maison 3D :"
 
-# Source-Hash: d9f22e79cfcfbdba
-# Review: required
-# English: "Close image studio"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.close"
-msgstr "Fermer le studio d’images"
-
 # Source-Hash: 41533734a5a7b89d
 # Review: required
 # English: "Download"
@@ -927,14 +919,6 @@ msgstr "MODÈLE"
 msgid "app.houseAgent.imageStudio.modelSubtitleImage"
 msgstr "Rendu architectural fidèle au plan"
 
-# Source-Hash: a3e7297d7170c3d0
-# Review: required
-# English: "Start + end frame motion interpolation"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.modelSubtitleVideo"
-msgstr "Interpolation début + fin"
-
 # Source-Hash: b896f047ef820c55
 # Review: required
 # English: "Create or select a building level first before importing a guide."
@@ -1047,14 +1031,6 @@ msgstr "RÉFÉRENCES"
 msgid "app.houseAgent.imageStudio.removeRef"
 msgstr "Retirer l’image de référence"
 
-# Source-Hash: e994d6525f811641
-# Review: required
-# English: "Renders"
-#: apps/editor/components/house-agent-image-studio.tsx
-#, fuzzy
-msgid "app.houseAgent.imageStudio.rendersTitle"
-msgstr "Rendus"
-
 # Source-Hash: c2acf73aa17a9c09
 # Review: required
 # English: "RESOLUTION"
@@ -1162,7 +1138,7 @@ msgstr "photoréaliste"
 # Source-Hash: fc6eaa65315f601d
 # Review: required
 # English: "Image"
-#: apps/editor/components/house-agent-image-studio.tsx
+#: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.imageStudio.tabImage"
 msgstr "Image"
@@ -1171,6 +1147,7 @@ msgstr "Image"
 # Review: required
 # English: "Video"
 #: apps/editor/components/house-agent-image-studio.tsx
+#: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.imageStudio.tabVideo"
 msgstr "Vidéo"
@@ -1374,6 +1351,14 @@ msgstr "Image de départ"
 #, fuzzy
 msgid "app.houseAgent.imageStudio.video.stopRecording"
 msgstr "Arrêter ({elapsed}s / {total}s)"
+
+# Source-Hash: 69bd8629697494b5
+# Review: required
+# English: "Record a walkthrough of the current 3D scene."
+#: apps/editor/components/house-agent-image-studio.tsx
+#, fuzzy
+msgid "app.houseAgent.imageStudio.viewportRecording"
+msgstr "Enregistrez une visite de la scène 3D actuelle."
 
 # Source-Hash: 8f4b2028ad75465d
 # Review: required
@@ -1592,9 +1577,9 @@ msgstr "Analyser et planifier"
 msgid "app.houseAgent.plan.dimensionsTitle"
 msgstr "Cotes et références"
 
-# English: "Floors and furniture"
 # Source-Hash: 4fc009cc8769e83e
 # Review: required
+# English: "Floors and furniture"
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.furnitureByLevel"
@@ -1624,17 +1609,17 @@ msgstr "Questions à confirmer"
 msgid "app.houseAgent.plan.readyHint"
 msgstr "Toutes les dimensions requises sont vérifiées et prêtes à construire."
 
-# English: "Repair plan"
 # Source-Hash: b0a7f191c38b6160
 # Review: required
+# English: "Repair plan"
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.repairAfter"
 msgstr "Plan de réparation"
 
-# English: "Before repair"
 # Source-Hash: d968ae25559b2824
 # Review: required
+# English: "Before repair"
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.repairBefore"
@@ -1691,6 +1676,8 @@ msgstr "Proposé"
 # Source-Hash: 1da2396d93334e8a
 # Review: required
 # English: "Construction sequence"
+#: apps/editor/components/house-agent-architect-popover.tsx
+#: apps/editor/components/house-agent-panel.tsx
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.stepsTitle"
@@ -1712,13 +1699,13 @@ msgstr "Hauteur"
 msgid "app.houseAgent.plan.unit"
 msgstr "Unité"
 
-# Source-Hash: 3f59d53ba6f09656
+# Source-Hash: b8c2b4cbc1e4491b
 # Review: required
-# English: "Messages and images are sent to your configured model when you send. This conversation lasts until the page is reloaded."
+# English: "Messages and images are sent to your configured model when you send. Completed conversations are saved in this browser for this project."
 #: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.privacy"
-msgstr "Les messages et les images sont envoyés à votre modèle configuré lors de l’envoi. Les conversations terminées sont enregistrées dans ce navigateur pour ce projet."
+msgstr "À l’envoi, les messages et les images sont transmis au modèle configuré. Les conversations terminées sont enregistrées dans ce navigateur pour ce projet."
 
 # Source-Hash: e57eb1081bcecda7
 # Review: required
@@ -1740,6 +1727,7 @@ msgstr "Envoyer et mettre à jour"
 # Review: required
 # English: "Remove image"
 #: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-assets-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.removeImage"
 msgstr "Supprimer l’image"
@@ -2035,7 +2023,7 @@ msgstr "Conception 3D"
 # Source-Hash: 9c2c3aea30edf941
 # Review: required
 # English: "Image Studio"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/house-agent-image-studio.tsx
 #, fuzzy
 msgid "app.houseAgent.tab.studio"
 msgstr "Studio Image"
@@ -2775,6 +2763,390 @@ msgstr "Appentis"
 #, fuzzy
 msgid "app.lib.buildTabState.wall"
 msgstr "Mur"
+
+# Source-Hash: e93bad952bbf6d93
+# Review: required
+# English: "Model categories"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.categories"
+msgstr "Catégories de modèles"
+
+# Source-Hash: 2ef76ca718214dcb
+# Review: required
+# English: "Chat Completions"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.chatEndpoint"
+msgstr "Chat Completions"
+
+# Source-Hash: c8c1c43faeb8977d
+# Review: required
+# English: "Close API configuration"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.close"
+msgstr "Fermer la configuration de l’API"
+
+# Source-Hash: 7a9c55b1c5a6e61d
+# Review: required
+# English: "Connection"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.connection"
+msgstr "Connexion"
+
+# Source-Hash: 7a967c7a1d371919
+# Review: required
+# English: "{credits} Meshy credits"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.credits"
+msgstr "{credits} crédits Meshy"
+
+# Source-Hash: fa15bbf7b01dda10
+# Review: required
+# English: "Find model IDs or test the provider with a read-only request."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.diagnosticHint"
+msgstr "Trouvez les identifiants des modèles ou testez le fournisseur avec une requête en lecture seule."
+
+# Source-Hash: c3c7aaf763407d7f
+# Review: required
+# English: "Model discovery and testing"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.diagnostics"
+msgstr "Détection des modèles et tests"
+
+# Source-Hash: 96d6a8a263637425
+# Review: required
+# English: "{durationMs} ms"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.duration"
+msgstr "{durationMs} ms"
+
+# Source-Hash: 54aff7d8e001c4ea
+# Review: required
+# English: "Chat, image, video and 3D models"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.entry"
+msgstr "Modèles de conversation, d’image, de vidéo et de 3D"
+
+# Source-Hash: 003886655e74e29b
+# Review: required
+# English: "HTTP {status}"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.httpStatus"
+msgstr "HTTP {status}"
+
+# Source-Hash: 1477fdfaa123ea63
+# Review: required
+# English: "Images API"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.imagesEndpoint"
+msgstr "API Images"
+
+# Source-Hash: a851e1b409652737
+# Review: required
+# English: "API Key"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.key"
+msgstr "Clé API"
+
+# Source-Hash: 0e193954a5814100
+# Review: required
+# English: "Key required"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.keyMissing"
+msgstr "Clé requise"
+
+# Source-Hash: 047f2d8eb169d83b
+# Review: required
+# English: "Key saved"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.keySaved"
+msgstr "Clé enregistrée"
+
+# Source-Hash: 38d627fdcb54591d
+# Review: required
+# English: "Waiting for response…"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.loading"
+msgstr "En attente de la réponse…"
+
+# Source-Hash: ef68607f03be7ec5
+# Review: required
+# English: "Verifies your Meshy key and remaining credits."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.meshDiagnosticHint"
+msgstr "Vérifie votre clé Meshy et le solde de crédits."
+
+# Source-Hash: 0e321e9d82d78ece
+# Review: required
+# English: "The request succeeded. The selected model is not in the returned catalog."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.modelNotListed"
+msgstr "La requête a abouti. Le modèle sélectionné ne figure pas dans le catalogue renvoyé."
+
+# Source-Hash: fc98a3c5dc2f1baf
+# Review: required
+# English: "No models match your search."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.noModelMatches"
+msgstr "Aucun modèle ne correspond à votre recherche."
+
+# Source-Hash: 8fbcee13a1264932
+# Review: required
+# English: "No models were returned for this category."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.noModels"
+msgstr "Aucun modèle n’a été renvoyé pour cette catégorie."
+
+# Source-Hash: d749ebfa406a1546
+# Review: required
+# English: "Save configuration"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.save"
+msgstr "Enregistrer la configuration"
+
+# Source-Hash: 8ed7af6e8306e768
+# Review: required
+# English: "Saved to server environment."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.saved"
+msgstr "Enregistré dans l’environnement du serveur."
+
+# Source-Hash: a96b1c4399c6358f
+# Review: required
+# English: "Search models"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.searchModels"
+msgstr "Rechercher des modèles"
+
+# Source-Hash: cb3a5211d8e12925
+# Review: required
+# English: "Test request"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.test"
+msgstr "Tester la connexion"
+
+# Source-Hash: 6273b619a172cafa
+# Review: required
+# English: "Check capabilities"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.workflow"
+msgstr "Vérifier les fonctionnalités"
+
+# Source-Hash: 4a8dfce3f278257b
+# Review: required
+# English: "Catalog"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.catalog"
+msgstr "Catalogue"
+
+# Source-Hash: fdfac0ae1ad92fe6
+# Review: required
+# English: "Category"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.category"
+msgstr "Catégorie"
+
+# Source-Hash: c7d6cdde8aa1e709
+# Review: required
+# English: "Configured"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.connected"
+msgstr "Configuré"
+
+# Source-Hash: 1c4b9a22ae8262b1
+# Review: required
+# English: "Discard preview"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.discard"
+msgstr "Abandonner l’aperçu"
+
+# Source-Hash: 9c9805c282a019a0
+# Review: required
+# English: "Generate 3D model"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.generate"
+msgstr "Générer un modèle 3D"
+
+# Source-Hash: 9bdfcdc904cff85a
+# Review: required
+# English: "Generating model"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.generating"
+msgstr "Génération du modèle"
+
+# Source-Hash: a08b703aa49cfccd
+# Review: required
+# English: "PNG, JPG or WebP · up to 5 MB"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.imageFormats"
+msgstr "PNG, JPG ou WebP · 5 Mo maximum"
+
+# Source-Hash: 41035ef9adb02bd0
+# Review: required
+# English: "Image to 3D"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.imageMode"
+msgstr "Image vers 3D"
+
+# Source-Hash: de2461628b229b0a
+# Review: required
+# English: "My models"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.mine"
+msgstr "Mes modèles"
+
+# Source-Hash: 6cc5df35f0338e23
+# Review: required
+# English: "Name"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.name"
+msgstr "Nom"
+
+# Source-Hash: 45241b52afe5751b
+# Review: required
+# English: "Setup needed"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.notConnected"
+msgstr "Configuration requise"
+
+# Source-Hash: 722741535b346e09
+# Review: required
+# English: "Place"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.place"
+msgstr "Placer"
+
+# Source-Hash: 13637366ffe48779
+# Review: required
+# English: "Could not preview this GLB."
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.previewFailed"
+msgstr "Impossible d’afficher l’aperçu de ce fichier GLB."
+
+# Source-Hash: 6f2844c7ed29335a
+# Review: required
+# English: "3D preview unavailable."
+#: apps/editor/components/model-asset-preview.tsx
+#, fuzzy
+msgid "app.modelAssets.previewUnavailable"
+msgstr "Aperçu indisponible"
+
+# Source-Hash: d20cb3d70f9b94e0
+# Review: required
+# English: "Describe a 3D model"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.prompt"
+msgstr "Décrivez un modèle 3D"
+
+# Source-Hash: 3c42b50c77dcb733
+# Review: required
+# English: "Or choose a reference image"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.reference"
+msgstr "Ou choisissez une image de référence"
+
+# Source-Hash: 33b5a98873e6d026
+# Review: required
+# English: "Choose a PNG, JPEG or WebP image smaller than 5 MB."
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.referenceLimit"
+msgstr "Choisissez une image PNG, JPEG ou WebP de moins de 5 Mo."
+
+# Source-Hash: 875e8b17daace2b3
+# Review: required
+# English: "Check again"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.retry"
+msgstr "Vérifier à nouveau"
+
+# Source-Hash: 715373013d7a1ab8
+# Review: required
+# English: "Save to my models"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.save"
+msgstr "Enregistrer dans Mes modèles"
+
+# Source-Hash: 5a986a64e35975ab
+# Review: required
+# English: "3D Model Studio"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.studio"
+msgstr "Studio de modèles 3D"
+
+# Source-Hash: 01f729f4166f1508
+# Review: required
+# English: "Text to 3D"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.textMode"
+msgstr "Texte vers 3D"
+
+# Source-Hash: 8196b865a724a245
+# Review: required
+# English: "Adding textures"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.texturing"
+msgstr "Ajout des textures"
+
+# Source-Hash: e36a0ae39b6f859a
+# Review: required
+# English: "Upload GLB"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.upload"
+msgstr "Importer un fichier GLB"
+
+# Source-Hash: d04f4f26292d7548
+# Review: required
+# English: "Model width (m)"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.width"
+msgstr "Largeur du modèle (m)"
 
 # Source-Hash: 8d17e7556ce142da
 # Review: required

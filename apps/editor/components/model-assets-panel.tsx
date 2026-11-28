@@ -290,8 +290,10 @@ function PersonalModels() {
   }, [])
   const onPreviewError = useCallback(() => {
     setBounds(null)
-    setError('Could not preview this GLB.')
-  }, [])
+    setError(
+      i18n._({ id: 'app.modelAssets.previewFailed', message: 'Could not preview this GLB.' }),
+    )
+  }, [i18n])
 
   async function save() {
     if (!upload || !bounds || busy) return
@@ -347,6 +349,7 @@ function PersonalModels() {
             <h3 className="font-semibold leading-tight text-foreground">
               {i18n._({ id: 'app.modelAssets.studio', message: '3D Model Studio' })}
             </h3>
+            {/* i18n-ignore: provider brand name */}
             <span className="text-muted-foreground text-xs">Meshy</span>
           </div>
           {configured !== null && (
@@ -434,7 +437,12 @@ function PersonalModels() {
                       file.size > MAX_REFERENCE_BYTES ||
                       !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
                     ) {
-                      setError('Choose a PNG, JPEG or WebP image smaller than 5 MB.')
+                      setError(
+                        i18n._({
+                          id: 'app.modelAssets.referenceLimit',
+                          message: 'Choose a PNG, JPEG or WebP image smaller than 5 MB.',
+                        }),
+                      )
                       return
                     }
                     setReference(file)

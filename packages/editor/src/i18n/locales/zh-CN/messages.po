@@ -608,13 +608,6 @@ msgstr "无法截取当前 3D 视角参考图。"
 msgid "app.houseAgent.imageStudio.chatAttachPrefix"
 msgstr "请识图分析这张生成的设计效果图，提取建筑布局、体块比例、材质与尺寸关系，并规划或构建 3D 房屋："
 
-# Source-Hash: d9f22e79cfcfbdba
-# Review: human
-# English: "Close image studio"
-#: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.close"
-msgstr "关闭生图设计工作室"
-
 # Source-Hash: 41533734a5a7b89d
 # Review: human
 # English: "Download"
@@ -741,13 +734,6 @@ msgstr "模型"
 msgid "app.houseAgent.imageStudio.modelSubtitleImage"
 msgstr "忠于当前空间布局的建筑渲染出图"
 
-# Source-Hash: a3e7297d7170c3d0
-# Review: human
-# English: "Start + end frame motion interpolation"
-#: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.modelSubtitleVideo"
-msgstr "首尾帧建筑漫游视频插值生成"
-
 # Source-Hash: b896f047ef820c55
 # Review: human
 # English: "Create or select a building level first before importing a guide."
@@ -846,13 +832,6 @@ msgstr "参考图"
 msgid "app.houseAgent.imageStudio.removeRef"
 msgstr "移除参考图"
 
-# Source-Hash: e994d6525f811641
-# Review: human
-# English: "Renders"
-#: apps/editor/components/house-agent-image-studio.tsx
-msgid "app.houseAgent.imageStudio.rendersTitle"
-msgstr "视觉渲染工作室"
-
 # Source-Hash: c2acf73aa17a9c09
 # Review: human
 # English: "RESOLUTION"
@@ -947,7 +926,7 @@ msgstr "照片级写实"
 # Source-Hash: fc6eaa65315f601d
 # Review: human
 # English: "Image"
-#: apps/editor/components/house-agent-image-studio.tsx
+#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.imageStudio.tabImage"
 msgstr "图片"
 
@@ -955,6 +934,7 @@ msgstr "图片"
 # Review: human
 # English: "Video"
 #: apps/editor/components/house-agent-image-studio.tsx
+#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.imageStudio.tabVideo"
 msgstr "视频"
 
@@ -1132,6 +1112,14 @@ msgstr "起始帧"
 #: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.imageStudio.video.stopRecording"
 msgstr "停止录制（{elapsed}s / {total}s）"
+
+# Source-Hash: 69bd8629697494b5
+# Review: required
+# English: "Record a walkthrough of the current 3D scene."
+#: apps/editor/components/house-agent-image-studio.tsx
+#, fuzzy
+msgid "app.houseAgent.imageStudio.viewportRecording"
+msgstr "录制当前 3D 场景的漫游视频。"
 
 # Source-Hash: 8f4b2028ad75465d
 # Review: human
@@ -1323,9 +1311,9 @@ msgstr "分析推理并规划"
 msgid "app.houseAgent.plan.dimensionsTitle"
 msgstr "尺寸依据与校准"
 
-# English: "Floors and furniture"
 # Source-Hash: 4fc009cc8769e83e
 # Review: required
+# English: "Floors and furniture"
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.furnitureByLevel"
@@ -1352,17 +1340,17 @@ msgstr "待确认问题"
 msgid "app.houseAgent.plan.readyHint"
 msgstr "所有关键尺寸已核对就绪，可以开始建模。"
 
-# English: "Repair plan"
 # Source-Hash: b0a7f191c38b6160
 # Review: required
+# English: "Repair plan"
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.repairAfter"
 msgstr "修复方案"
 
-# English: "Before repair"
 # Source-Hash: d968ae25559b2824
 # Review: required
+# English: "Before repair"
 #: apps/editor/components/house-agent-plan-card.tsx
 #, fuzzy
 msgid "app.houseAgent.plan.repairBefore"
@@ -1413,6 +1401,8 @@ msgstr "建议"
 # Source-Hash: 1da2396d93334e8a
 # Review: human
 # English: "Construction sequence"
+#: apps/editor/components/house-agent-architect-popover.tsx
+#: apps/editor/components/house-agent-panel.tsx
 #: apps/editor/components/house-agent-plan-card.tsx
 msgid "app.houseAgent.plan.stepsTitle"
 msgstr "分步建模顺序"
@@ -1431,12 +1421,13 @@ msgstr "层高"
 msgid "app.houseAgent.plan.unit"
 msgstr "图纸单位"
 
-# Source-Hash: 3f59d53ba6f09656
-# Review: human
-# English: "Messages and images are sent to your configured model when you send. This conversation lasts until the page is reloaded."
+# Source-Hash: b8c2b4cbc1e4491b
+# Review: required
+# English: "Messages and images are sent to your configured model when you send. Completed conversations are saved in this browser for this project."
 #: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
 msgid "app.houseAgent.privacy"
-msgstr "发送后，消息与图片会提交给您配置的模型。已完成的对话将保存在当前浏览器的本项目中。"
+msgstr "发送时，消息和图片会传给你配置的模型。已完成的对话会保存在此浏览器的当前项目中。"
 
 # Source-Hash: e57eb1081bcecda7
 # Review: human
@@ -1456,6 +1447,7 @@ msgstr "发送并更新建模"
 # Review: human
 # English: "Remove image"
 #: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/model-assets-panel.tsx
 msgid "app.houseAgent.removeImage"
 msgstr "移除图片"
 
@@ -1715,7 +1707,7 @@ msgstr "设计建模"
 # Source-Hash: 9c2c3aea30edf941
 # Review: human
 # English: "Image Studio"
-#: apps/editor/components/house-agent-panel.tsx
+#: apps/editor/components/house-agent-image-studio.tsx
 msgid "app.houseAgent.tab.studio"
 msgstr "图片生成"
 
@@ -2243,6 +2235,390 @@ msgstr "单坡"
 #: apps/editor/lib/build-tab-state.ts
 msgid "app.lib.buildTabState.wall"
 msgstr "墙体"
+
+# Source-Hash: e93bad952bbf6d93
+# Review: required
+# English: "Model categories"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.categories"
+msgstr "模型类别"
+
+# Source-Hash: 2ef76ca718214dcb
+# Review: required
+# English: "Chat Completions"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.chatEndpoint"
+msgstr "Chat Completions"
+
+# Source-Hash: c8c1c43faeb8977d
+# Review: required
+# English: "Close API configuration"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.close"
+msgstr "关闭 API 配置"
+
+# Source-Hash: 7a9c55b1c5a6e61d
+# Review: required
+# English: "Connection"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.connection"
+msgstr "连接"
+
+# Source-Hash: 7a967c7a1d371919
+# Review: required
+# English: "{credits} Meshy credits"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.credits"
+msgstr "{credits} Meshy 积分"
+
+# Source-Hash: fa15bbf7b01dda10
+# Review: required
+# English: "Find model IDs or test the provider with a read-only request."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.diagnosticHint"
+msgstr "查找模型 ID，或用只读请求测试服务。"
+
+# Source-Hash: c3c7aaf763407d7f
+# Review: required
+# English: "Model discovery and testing"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.diagnostics"
+msgstr "模型识别与连接测试"
+
+# Source-Hash: 96d6a8a263637425
+# Review: required
+# English: "{durationMs} ms"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.duration"
+msgstr "{durationMs} 毫秒"
+
+# Source-Hash: 54aff7d8e001c4ea
+# Review: required
+# English: "Chat, image, video and 3D models"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.entry"
+msgstr "对话、图片、视频和 3D 模型"
+
+# Source-Hash: 003886655e74e29b
+# Review: required
+# English: "HTTP {status}"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.httpStatus"
+msgstr "HTTP {status}"
+
+# Source-Hash: 1477fdfaa123ea63
+# Review: required
+# English: "Images API"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.imagesEndpoint"
+msgstr "Images API"
+
+# Source-Hash: a851e1b409652737
+# Review: required
+# English: "API Key"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.key"
+msgstr "API 密钥"
+
+# Source-Hash: 0e193954a5814100
+# Review: required
+# English: "Key required"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.keyMissing"
+msgstr "需要密钥"
+
+# Source-Hash: 047f2d8eb169d83b
+# Review: required
+# English: "Key saved"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.keySaved"
+msgstr "密钥已保存"
+
+# Source-Hash: 38d627fdcb54591d
+# Review: required
+# English: "Waiting for response…"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.loading"
+msgstr "正在等待响应…"
+
+# Source-Hash: ef68607f03be7ec5
+# Review: required
+# English: "Verifies your Meshy key and remaining credits."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.meshDiagnosticHint"
+msgstr "验证 Meshy 密钥并查询剩余积分。"
+
+# Source-Hash: 0e321e9d82d78ece
+# Review: required
+# English: "The request succeeded. The selected model is not in the returned catalog."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.modelNotListed"
+msgstr "请求成功，但返回的目录里没有所选模型。"
+
+# Source-Hash: fc98a3c5dc2f1baf
+# Review: required
+# English: "No models match your search."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.noModelMatches"
+msgstr "没有符合搜索条件的模型。"
+
+# Source-Hash: 8fbcee13a1264932
+# Review: required
+# English: "No models were returned for this category."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.noModels"
+msgstr "该类别未返回任何模型。"
+
+# Source-Hash: d749ebfa406a1546
+# Review: required
+# English: "Save configuration"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.save"
+msgstr "保存配置"
+
+# Source-Hash: 8ed7af6e8306e768
+# Review: required
+# English: "Saved to server environment."
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.saved"
+msgstr "已保存到服务器环境。"
+
+# Source-Hash: a96b1c4399c6358f
+# Review: required
+# English: "Search models"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.searchModels"
+msgstr "搜索模型"
+
+# Source-Hash: cb3a5211d8e12925
+# Review: required
+# English: "Test request"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.test"
+msgstr "测试请求"
+
+# Source-Hash: 6273b619a172cafa
+# Review: required
+# English: "Check capabilities"
+#: apps/editor/components/model-api-settings-dialog.tsx
+#, fuzzy
+msgid "app.modelApi.workflow"
+msgstr "检查能力"
+
+# Source-Hash: 4a8dfce3f278257b
+# Review: required
+# English: "Catalog"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.catalog"
+msgstr "素材库"
+
+# Source-Hash: fdfac0ae1ad92fe6
+# Review: required
+# English: "Category"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.category"
+msgstr "类别"
+
+# Source-Hash: c7d6cdde8aa1e709
+# Review: required
+# English: "Configured"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.connected"
+msgstr "已配置"
+
+# Source-Hash: 1c4b9a22ae8262b1
+# Review: required
+# English: "Discard preview"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.discard"
+msgstr "放弃预览"
+
+# Source-Hash: 9c9805c282a019a0
+# Review: required
+# English: "Generate 3D model"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.generate"
+msgstr "生成 3D 模型"
+
+# Source-Hash: 9bdfcdc904cff85a
+# Review: required
+# English: "Generating model"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.generating"
+msgstr "正在生成模型"
+
+# Source-Hash: a08b703aa49cfccd
+# Review: required
+# English: "PNG, JPG or WebP · up to 5 MB"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.imageFormats"
+msgstr "PNG、JPG 或 WebP · 最大 5 MB"
+
+# Source-Hash: 41035ef9adb02bd0
+# Review: required
+# English: "Image to 3D"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.imageMode"
+msgstr "图片生成 3D"
+
+# Source-Hash: de2461628b229b0a
+# Review: required
+# English: "My models"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.mine"
+msgstr "我的模型"
+
+# Source-Hash: 6cc5df35f0338e23
+# Review: required
+# English: "Name"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.name"
+msgstr "名称"
+
+# Source-Hash: 45241b52afe5751b
+# Review: required
+# English: "Setup needed"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.notConnected"
+msgstr "待配置"
+
+# Source-Hash: 722741535b346e09
+# Review: required
+# English: "Place"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.place"
+msgstr "放入场景"
+
+# Source-Hash: 13637366ffe48779
+# Review: required
+# English: "Could not preview this GLB."
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.previewFailed"
+msgstr "无法预览此 GLB 文件。"
+
+# Source-Hash: 6f2844c7ed29335a
+# Review: required
+# English: "3D preview unavailable."
+#: apps/editor/components/model-asset-preview.tsx
+#, fuzzy
+msgid "app.modelAssets.previewUnavailable"
+msgstr "预览不可用"
+
+# Source-Hash: d20cb3d70f9b94e0
+# Review: required
+# English: "Describe a 3D model"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.prompt"
+msgstr "描述要生成的 3D 模型"
+
+# Source-Hash: 3c42b50c77dcb733
+# Review: required
+# English: "Or choose a reference image"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.reference"
+msgstr "或选择参考图片"
+
+# Source-Hash: 33b5a98873e6d026
+# Review: required
+# English: "Choose a PNG, JPEG or WebP image smaller than 5 MB."
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.referenceLimit"
+msgstr "请选择小于 5 MB 的 PNG、JPEG 或 WebP 图片。"
+
+# Source-Hash: 875e8b17daace2b3
+# Review: required
+# English: "Check again"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.retry"
+msgstr "重新检查"
+
+# Source-Hash: 715373013d7a1ab8
+# Review: required
+# English: "Save to my models"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.save"
+msgstr "保存到我的模型"
+
+# Source-Hash: 5a986a64e35975ab
+# Review: required
+# English: "3D Model Studio"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.studio"
+msgstr "3D 模型工作室"
+
+# Source-Hash: 01f729f4166f1508
+# Review: required
+# English: "Text to 3D"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.textMode"
+msgstr "文字生成 3D"
+
+# Source-Hash: 8196b865a724a245
+# Review: required
+# English: "Adding textures"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.texturing"
+msgstr "正在添加纹理"
+
+# Source-Hash: e36a0ae39b6f859a
+# Review: required
+# English: "Upload GLB"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.upload"
+msgstr "上传 GLB"
+
+# Source-Hash: d04f4f26292d7548
+# Review: required
+# English: "Model width (m)"
+#: apps/editor/components/model-assets-panel.tsx
+#, fuzzy
+msgid "app.modelAssets.width"
+msgstr "模型宽度（米）"
 
 # Source-Hash: 8d17e7556ce142da
 # Review: human

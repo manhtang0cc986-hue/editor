@@ -382,8 +382,12 @@ export function ModelApiSettingsDialog() {
                             message: 'Auto',
                           })}
                         </option>
-                        <option value="images">Images API</option>
-                        <option value="chat">Chat Completions</option>
+                        <option value="images">
+                          {i18n._({ id: 'app.modelApi.imagesEndpoint', message: 'Images API' })}
+                        </option>
+                        <option value="chat">
+                          {i18n._({ id: 'app.modelApi.chatEndpoint', message: 'Chat Completions' })}
+                        </option>
                       </select>
                     </label>
                   )}
@@ -472,8 +476,19 @@ export function ModelApiSettingsDialog() {
                       role="status"
                       className="flex flex-wrap items-center gap-2 text-sm font-medium"
                     >
-                      <Check size={15} className="text-emerald-500" /> HTTP {probe.status}
-                      <span className="text-xs text-muted-foreground">{probe.durationMs} ms</span>
+                      <Check size={15} className="text-emerald-500" />
+                      {i18n._({
+                        id: 'app.modelApi.httpStatus',
+                        message: 'HTTP {status}',
+                        values: { status: probe.status },
+                      })}
+                      <span className="text-xs text-muted-foreground">
+                        {i18n._({
+                          id: 'app.modelApi.duration',
+                          message: '{durationMs} ms',
+                          values: { durationMs: probe.durationMs },
+                        })}
+                      </span>
                       {probe.credits !== undefined && (
                         <span className="text-xs text-muted-foreground">
                           {i18n._({
