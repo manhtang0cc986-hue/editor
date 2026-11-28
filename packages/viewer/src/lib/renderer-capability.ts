@@ -80,6 +80,15 @@ async function requestWebGpuDevice(gpu: RendererGpu, powerPreference?: RendererP
   return adapter.requestDevice(requiredFeatures?.length ? { requiredFeatures } : undefined)
 }
 
+function releaseProbeContext(context: unknown) {
+  const loseContext = (
+    context as { getExtension?: (name: string) => { loseContext?: () => void } | null }
+  ).getExtension?.('WEBGL_lose_context')
+  try {
+    loseContext?.loseContext?.()
+  } catch {}
+}
+
 export async function detectRendererCapability({
   canvas = browserCanvas(),
   gpu = browserGpu(),
@@ -110,7 +119,10 @@ export async function detectRendererCapability({
   if (canvas) {
     try {
       const context = canvas.getContext('webgl2')
-      if (context) return { backend: 'webgl', status: 'supported' }
+      if (context) {
+        releaseProbeContext(context)
+        return { backend: 'webgl', status: 'supported' }
+      }
     } catch (error) {
       capabilityError ??= error
     }

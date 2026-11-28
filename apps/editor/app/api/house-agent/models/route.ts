@@ -46,7 +46,7 @@ function modelKind(id: string, model: z.infer<typeof ModelSchema>): DetectedMode
     )
   if (model.capabilities?.chat === true && supportsTools !== false) return 'chat'
   if (
-    /(?:^|[\s/:_.-])(?:gpt-image|dall-e|imagen|nano-banana|flux|midjourney|stable-diffusion|gemini-[\w.-]+-image)(?:$|[\s/:_.-])/i.test(
+    /(?:^|[\s/:_.-])(?:gpt-image|dall-e|imagen|nano-banana|flux|midjourney|stable-diffusion|gemini-[\w.-]+-image|qwen-image|wanx|cogview|kolors|seedream|jimeng|hunyuan-image)(?:$|[\s/:_.-])/i.test(
       id,
     )
   )
@@ -80,9 +80,11 @@ export async function POST(request: Request) {
 
   const useImageServer = 'useServerConfig' in parsed && parsed.target === 'image'
   const server = useImageServer ? imageConfiguration() : agentConfiguration()
-  const baseUrl = ('useServerConfig' in parsed ? server.baseUrl : parsed.baseUrl || server.baseUrl)
+  const rawBase = ('useServerConfig' in parsed ? server.baseUrl : parsed.baseUrl || server.baseUrl)
     .trim()
+    .replace(/\/+(?:chat\/completions|images\/(?:generations|edits)|models)\/?$/i, '')
     .replace(/\/+$/, '')
+  const baseUrl = rawBase
   const apiKey =
     'useServerConfig' in parsed
       ? useImageServer

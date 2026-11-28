@@ -58,6 +58,7 @@ describe('scene-media-capture', () => {
       { category: 'room', label: '一楼 · 客厅' },
       { category: 'room', label: '一楼 · 主卧' },
     ])
+    expect(shots[0]?.args).toEqual({ projection: 'perspective', lighting: 'day' })
     expect(shots[2]?.args).toEqual({
       projection: 'perspective',
       interior: { zoneId: 'zone_living', levelId: 'level_0' },

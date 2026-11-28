@@ -62,7 +62,7 @@ export function planRoomCaptureShots(
       id: 'shot-exterior',
       label: 'Exterior 3D',
       category: 'exterior',
-      args: { projection: 'perspective', lighting: 'daylight' },
+      args: { projection: 'perspective', lighting: 'day' },
     },
     {
       id: 'shot-top-plan',
@@ -122,7 +122,7 @@ export async function captureRoomShowcasePhotos(options?: {
     const shot = shots[i]!
     options?.onProgress?.(i + 1, shots.length, shot.label)
     try {
-      const result = await executeViewScene(shot.args)
+      const result = await executeViewScene(shot.args, options?.signal)
       const previews = Array.isArray(result.previews)
         ? (result.previews as Array<{ image?: string }>)
         : []

@@ -5,8 +5,9 @@ import { Bounds } from '@react-three/drei/core/Bounds'
 import { useGLTF } from '@react-three/drei/core/Gltf'
 import { OrbitControls } from '@react-three/drei/core/OrbitControls'
 import { Canvas } from '@react-three/fiber'
-import { Component, type ReactNode, Suspense, useEffect, useMemo } from 'react'
+import { Component, type ReactNode, Suspense, useEffect, useMemo, useState } from 'react'
 import { Box3, Vector3 } from 'three'
+import { canCreateWebGLPreviewContext } from '@/lib/webgl-preview'
 
 type Vector = [number, number, number]
 export type ModelBounds = { dimensions: Vector; offset: Vector }
@@ -72,7 +73,19 @@ export function ModelAssetPreview({
   onBounds: (bounds: ModelBounds) => void
   onError: () => void
 }) {
+  const [webglReady, setWebglReady] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const ok = canCreateWebGLPreviewContext()
+    setWebglReady(ok)
+    if (!ok) onError()
+  }, [onError])
+
   useEffect(() => () => useGLTF.clear(url), [url])
+
+  if (webglReady !== true) {
+    return null
+  }
 
   return (
     <div className="h-48 overflow-hidden rounded-lg border border-border bg-background">

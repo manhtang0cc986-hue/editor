@@ -110,7 +110,10 @@ export function serializeEnvUpdates(
 }
 
 function validateHttpBaseUrl(raw: string, label: string): string {
-  const trimmed = raw.trim().replace(/\/+$/, '')
+  const trimmed = raw
+    .trim()
+    .replace(/\/+(?:chat\/completions|images\/(?:generations|edits)|models)\/?$/i, '')
+    .replace(/\/+$/, '')
   let parsed: URL
   try {
     parsed = new URL(`${trimmed}/models`)

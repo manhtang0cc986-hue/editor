@@ -42,10 +42,17 @@ const PRESET_PROMPT_PREFIX: Record<ImageGenPreset, string> = {
     'Architectural villa courtyard and landscape design rendering, outdoor terrace, greenery, natural light, coherent elevation:',
 }
 
+function normalizeEndpointBaseUrl(raw: string | undefined): string {
+  return (raw ?? '')
+    .trim()
+    .replace(/\/+(?:chat\/completions|images\/(?:generations|edits)|models)\/?$/i, '')
+    .replace(/\/+$/, '')
+}
+
 function resolveImageRuntime(override: ImageClientConfig | undefined, env: NodeJS.ProcessEnv) {
   const base = imageConfiguration(env)
-  const serverBaseUrl = base.baseUrl.replace(/\/$/, '')
-  const customBaseUrl = override?.baseUrl?.trim().replace(/\/$/, '')
+  const serverBaseUrl = normalizeEndpointBaseUrl(base.baseUrl)
+  const customBaseUrl = normalizeEndpointBaseUrl(override?.baseUrl)
   const isCustomHost = Boolean(customBaseUrl && customBaseUrl !== serverBaseUrl)
   const baseUrl = customBaseUrl || serverBaseUrl
   const model = override?.model?.trim() || base.model || ''

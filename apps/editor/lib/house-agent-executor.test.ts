@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { emitter, type ThumbnailGenerateEvent } from '@pascal-app/core'
-import { captureEphemeralViewport } from './house-agent-executor'
+import { captureEphemeralViewport, executeHouseAgentTool } from './house-agent-executor'
 
 describe('house-agent-executor', () => {
   test('captureEphemeralViewport aborts immediately when signal is already aborted', async () => {
@@ -46,5 +46,16 @@ describe('house-agent-executor', () => {
       emitter.off('camera-controls:generate-thumbnail', onGenerate)
       globalThis.window = previousWindow
     }
+  })
+
+  test('executeHouseAgentTool skips generate_design_image cleanly when signal is aborted', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const result = await executeHouseAgentTool(
+      'generate_design_image',
+      { prompt: 'Modern villa exterior', preset: 'exterior' },
+      { allowWrites: false, signal: controller.signal },
+    )
+    expect(result).toMatchObject({ aborted: true })
   })
 })

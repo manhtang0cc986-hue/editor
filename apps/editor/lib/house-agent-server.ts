@@ -43,12 +43,16 @@ const BUILD_INSTRUCTIONS = `For a build or repair request, finish the work in th
 - Before any write, submit_house_plan with automation: intent build or repair; buildingType; total width, depth and height; ordered levels with their heights and room-by-room furniture allocation; and numbered phases grouped by level and task. Include structure, openings and furnishings as applicable. Use proposed measurements where the brief leaves them open. For repair, include repairBefore as a factual summary of the inspected condition, and describe the intended result in the new plan.
 - For new construction, one agent owns the entire plan. Label every phase with stage: layout (floors, rooms, circulation and primary openings), structure (slabs, stairs and roof as applicable), interiors (furnishing, room materials, and finishes), or review (final dimensions, circulation, clearances and verify_scene). Include these stages in that order. Split the first three into floor-specific phases when needed. Use one review phase at the end. Repair plans use only phases needed for the requested edit.
 - Call read_house_plan and wait for its result before doing the next phase. Follow its tasks, inspect the live scene after editing, and read that inspection result before calling complete_house_phase with phaseNumber and evidence. Once a phase closes, read the plan again and compare the next phase with the previous checkpoint before continuing. Group independent rooms or edits within each phase. If there is no building or level, call add_level first to bootstrap a blank scene. For repetitive storeys, group a range in one phase and use duplicate_level only when layouts match.
-- Build a connected layout. Draw adjacent rooms on matching shared edges and use create_room edge indices for openings. Check skipped openings. Add stairs between occupied levels and a roof where applicable. Use view_scene only when a preview is requested or needed, and do not retry unavailable captures.
+- Build a connected layout. Decompose complex multi-room or multi-storey floorplans into non-overlapping [x, z] zones with exact shared-edge coordinates before calling create_room, and use create_room edge indices for openings. Enforce realistic residential area, width, and height standards:
+  - Footprint & area: normal home 80–160 m² per storey (9–15 m width × 8–12 m depth); compact/townhouse 50–80 m² per storey (5–8 m width × 8–12 m depth).
+  - Heights: storey height 2.8–3.2 m (ground floor 3.0–3.2 m, upper floors 2.8–3.0 m); doors 2.1 m high (0.8–1.0 m wide, main entry 1.0–1.2 m); windows 1.2–1.6 m high (sill 0.8–0.9 m).
+  - Room widths & areas: living room >= 3.6 m wide (18–35 m²), master bedroom >= 3.2 m wide (12–20 m²), secondary bedroom >= 2.7 m wide (9–14 m²), kitchen >= 2.2 m wide (6–12 m²), bathroom >= 1.6 m wide (3.5–7 m²), corridor >= 1.0–1.2 m wide. Verify room footprints fit within the planned total width and depth.
+- Self-correct automatically: if create_room skips openings, or if get_level_summary / verify_scene reports disconnected walls, overlapping rooms, or missing stairs between occupied levels, fix them immediately before calling complete_house_phase. Add stairs between occupied levels and a roof where applicable. Use view_scene only when a preview is requested or needed, and do not retry unavailable captures.
 - Do not create a replacement building for a repair. Reuse existing IDs, and use geometry tools only on the affected elements.
 - Verify with verify_scene after the last edit, before closing the final phase, and correct actionable findings within scope. After completing every phase, stop and report what was built or repaired, including remaining issues and the before/after condition for a repair. Every scene edit supports Undo.
 - When the user asks a read-only question, answer without starting construction.`
 
-const PLAN_INSTRUCTIONS = `Plan only. Use inspection tools and submit_house_plan to record the layout, dimensions and their sources, room polygons, doors and windows, and construction steps. Keep unresolved questions visible. Do not edit the scene.`
+const PLAN_INSTRUCTIONS = `Plan only. Use inspection tools and submit_house_plan to record the layout, dimensions and their sources, non-overlapping room polygons with shared [x, z] edges, doors and windows, dimension/clearance checks, and numbered construction steps. Keep unresolved questions visible. Do not edit the scene.`
 
 export function validToolHistory(messages: AgentMessage[]): boolean {
   const pending = new Set<string>()
@@ -75,13 +79,20 @@ type ResolvedRuntimeConfig = {
   reasoningEffort: AgentReasoningEffort
 }
 
+function normalizeEndpointBaseUrl(raw: string | undefined): string {
+  return (raw ?? '')
+    .trim()
+    .replace(/\/+(?:chat\/completions|images\/(?:generations|edits)|models)\/?$/i, '')
+    .replace(/\/+$/, '')
+}
+
 function resolveRuntimeConfig(
   override: AgentClientConfig | undefined,
   env: NodeJS.ProcessEnv,
 ): ResolvedRuntimeConfig {
   const base = agentConfiguration(env)
-  const serverBaseUrl = base.baseUrl.replace(/\/$/, '')
-  const customBaseUrl = override?.baseUrl?.trim().replace(/\/$/, '')
+  const serverBaseUrl = normalizeEndpointBaseUrl(base.baseUrl)
+  const customBaseUrl = normalizeEndpointBaseUrl(override?.baseUrl)
   const isCustomHost = Boolean(customBaseUrl && customBaseUrl !== serverBaseUrl)
   const baseUrl = customBaseUrl || serverBaseUrl
   const model = override?.model?.trim() || base.model || ''

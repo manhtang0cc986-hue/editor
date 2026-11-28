@@ -19,6 +19,7 @@ test('model detection preserves custom chat aliases, distinguishes non-chat mode
         { id: 'text-only', capabilities: { chat: true, tool_calling: false } },
         { id: 'text-embedding-3-small' },
         { id: 'gemini-2.5-flash-image' },
+        { id: 'qwen-image-plus' },
         { id: 'sora-video' },
       ],
     }),
@@ -28,16 +29,20 @@ test('model detection preserves custom chat aliases, distinguishes non-chat mode
       new Request('http://localhost/api/house-agent/models', {
         method: 'POST',
         headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ baseUrl: 'https://models.example/v1', apiKey: 'synthetic-key' }),
+        body: JSON.stringify({
+          baseUrl: 'https://models.example/v1/chat/completions',
+          apiKey: 'synthetic-key',
+        }),
       }),
     )
     expect(response.status).toBe(200)
     expect(new URL(String(upstream.mock.calls[0]?.[0])).pathname).toBe('/v1/models')
     expect(await response.json()).toEqual({
-      count: 6,
+      count: 7,
       models: [
         { id: 'another-chat', kind: 'chat', reasoningEfforts: [] },
         { id: 'gemini-2.5-flash-image', kind: 'image' },
+        { id: 'qwen-image-plus', kind: 'image' },
         { id: 'sora-video', kind: 'other' },
         { id: 'text-embedding-3-small', kind: 'other' },
         { id: 'text-only', kind: 'other' },

@@ -744,7 +744,7 @@ const Viewer = forwardRef<ViewerHandle, ViewerProps>(function Viewer(
               }
 
               if (canvas) WEBGPU_RENDERER_CACHE.delete(canvas)
-              console.error('[viewer] WebGPURenderer init failed', result.error)
+              console.warn('[viewer] WebGPURenderer init failed; showing fallback UI', result.error)
               setRendererInitFailed(true)
               // Never settles on purpose. Rejecting is what produced
               // MONOREPO-EDITOR-59: R3F awaits this inside its own configure()

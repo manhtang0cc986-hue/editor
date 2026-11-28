@@ -337,4 +337,23 @@ describe('GPU renderer capability and initialization', () => {
     if (result.status === 'unsupported') expect(result.error).toBeInstanceOf(TypeError)
     expect(dispose).toHaveBeenCalledTimes(1)
   })
+
+  test('releases the temporary WebGL2 probe context after capability detection', async () => {
+    const loseContext = mock(() => undefined)
+    const probeCanvas = canvasWithContexts({
+      webgl2: {
+        getExtension: (name: string) => (name === 'WEBGL_lose_context' ? { loseContext } : null),
+      },
+    })
+
+    const result = await initializeGpuRenderer({
+      createRenderer: () => ({ init: async () => undefined }),
+      gpu: null,
+      probeCanvas,
+    })
+
+    expect(result.status).toBe('ready')
+    if (result.status === 'ready') expect(result.backend).toBe('webgl')
+    expect(loseContext).toHaveBeenCalledTimes(1)
+  })
 })

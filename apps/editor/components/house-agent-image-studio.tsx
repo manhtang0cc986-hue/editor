@@ -21,7 +21,7 @@ import {
   Wand2,
   X,
 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { captureEphemeralViewport } from '@/lib/house-agent-executor'
 import type { ImageGenPreset, ImageGenSize } from '@/lib/house-agent-protocol'
 import {
@@ -155,6 +155,16 @@ export function HouseAgentImageStudio({
   const [results, setResults] = useState<GeneratedDesignItem[]>([])
   const abortRef = useRef<AbortController | null>(null)
   const videoAbortRef = useRef<AbortController | null>(null)
+  const recordedVideosRef = useRef<Recorded3DVideo[]>([])
+  recordedVideosRef.current = recordedVideos
+
+  useEffect(() => {
+    return () => {
+      for (const vid of recordedVideosRef.current) {
+        URL.revokeObjectURL(vid.videoUrl)
+      }
+    }
+  }, [])
 
   async function handleCaptureCurrentPhoto() {
     if (roomShooting || capturingRef || generating) return
@@ -249,7 +259,13 @@ export function HouseAgentImageStudio({
         signal: controller.signal,
         onElapsed: setRecordingElapsed,
       })
-      setRecordedVideos((prev) => [video, ...prev].slice(0, 6))
+      setRecordedVideos((prev) => {
+        const next = [video, ...prev]
+        for (const dropped of next.slice(6)) {
+          URL.revokeObjectURL(dropped.videoUrl)
+        }
+        return next.slice(0, 6)
+      })
     } catch (err) {
       if (!controller.signal.aborted) {
         setError(

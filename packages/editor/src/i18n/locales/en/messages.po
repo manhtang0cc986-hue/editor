@@ -171,9 +171,9 @@ msgstr "Rename project"
 msgid "app.editorNavbar.share"
 msgstr "Share"
 
-#: apps/editor/components/house-agent-panel.tsx
-msgid "app.houseAgent.actions"
-msgstr "Tool activity"
+#: apps/editor/components/house-agent-activity.tsx
+msgid "app.houseAgent.activity.details"
+msgstr "Tool details"
 
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.architect.pillLabel"
@@ -199,9 +199,29 @@ msgstr "Confirm plan & build"
 msgid "app.houseAgent.captureView"
 msgstr "Capture current 3D viewport"
 
+#: apps/editor/components/scene-loader.tsx
+msgid "app.houseAgent.chatTab"
+msgstr "Chat"
+
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.close"
 msgstr "Close agent panel"
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.context.attached"
+msgstr "Scene selection attached"
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.context.furnish"
+msgstr "Plan furnishings"
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.context.inspect"
+msgstr "Inspect selection / floor"
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.context.selected"
+msgstr "Current selection will accompany your message"
 
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.drawing"
@@ -262,6 +282,26 @@ msgstr "Create a bright 6m x 5m living room with L-sofa, coffee table, TV wall, 
 #: apps/editor/components/house-agent-starters.tsx
 msgid "app.houseAgent.empty.card.livingTitle"
 msgstr "Create a living room"
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.history.empty"
+msgstr "No saved conversations yet."
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.history.failed"
+msgstr "Local conversation history could not be opened."
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.history.local"
+msgstr "Saved on this browser for this project. Opening a chat does not restore scene geometry."
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.history.saveFailed"
+msgstr "The response is ready, but local history could not be saved."
+
+#: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.history.title"
+msgstr "Chat history"
 
 #: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.imageLimit"
@@ -649,8 +689,32 @@ msgid "app.houseAgent.openImageStudio"
 msgstr "Design Image Studio (generate renderings & blueprints)"
 
 #: apps/editor/components/house-agent-panel.tsx
+msgid "app.houseAgent.openItems"
+msgstr "Open items"
+
+#: apps/editor/components/house-agent-panel.tsx
 msgid "app.houseAgent.openPicker"
 msgstr "Pick scene guides, 3D assets & materials"
+
+#: apps/editor/components/house-agent-activity.tsx
+msgid "app.houseAgent.phase.check"
+msgstr "Check result"
+
+#: apps/editor/components/house-agent-activity.tsx
+msgid "app.houseAgent.phase.finish"
+msgstr "Apply finishes"
+
+#: apps/editor/components/house-agent-activity.tsx
+msgid "app.houseAgent.phase.furnish"
+msgstr "Furnish rooms"
+
+#: apps/editor/components/house-agent-activity.tsx
+msgid "app.houseAgent.phase.inspect"
+msgstr "Read & plan"
+
+#: apps/editor/components/house-agent-activity.tsx
+msgid "app.houseAgent.phase.structure"
+msgstr "Build structure"
 
 #: apps/editor/components/house-agent-asset-picker.tsx
 msgid "app.houseAgent.picker.close"
@@ -917,7 +981,6 @@ msgid "app.houseAgent.tab.studio"
 msgstr "Image Studio"
 
 #: apps/editor/components/house-agent-panel.tsx
-#: apps/editor/components/scene-loader.tsx
 msgid "app.houseAgent.title"
 msgstr "House Agent"
 

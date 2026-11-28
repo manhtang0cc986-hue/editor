@@ -35,7 +35,7 @@ export function HouseAgentPlanCard({
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-sky-500/30 bg-sky-950/20 p-3 text-xs">
+    <div className="space-y-3 rounded-2xl border border-sky-400/25 bg-zinc-900/75 p-3.5 text-xs shadow-lg backdrop-blur-md">
       {automation?.repairBefore && (
         <div className="rounded-lg border border-white/10 bg-black/30 p-2.5">
           <p className="font-medium text-zinc-200">
@@ -88,9 +88,9 @@ export function HouseAgentPlanCard({
 
       {automation && (
         <>
-          <div className="rounded-lg border border-white/10 bg-black/30 p-2.5">
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/35 px-3 py-2">
             <p className="font-medium text-white">{automation.buildingType}</p>
-            <p className="mt-1 break-words font-mono text-sky-200">
+            <p className="shrink-0 rounded-md border border-sky-400/25 bg-sky-500/10 px-2 py-0.5 font-mono text-[11px] text-sky-200">
               {automation.widthMeters} × {automation.depthMeters} × {automation.heightMeters} m
             </p>
           </div>

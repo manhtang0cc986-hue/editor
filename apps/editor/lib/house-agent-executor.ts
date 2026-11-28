@@ -221,6 +221,35 @@ export async function executeViewScene(
   args: Record<string, unknown>,
   signal?: AbortSignal,
 ): Promise<Record<string, unknown>> {
+  if (args.camera === 'current') {
+    const conflicting = (
+      ['from', 'position', 'elevation', 'eyeHeight', 'fov', 'projection'] as const
+    ).filter((key) => args[key] !== undefined)
+    if (conflicting.length > 0) {
+      return {
+        code: 'camera_and_viewpoint',
+        error: `Give a camera or a viewpoint of your own, not both (${conflicting.join(', ')}).`,
+      }
+    }
+    const maxPx = typeof args.maxPx === 'number' ? Math.min(1920, Math.max(64, args.maxPx)) : 1280
+    const capture = await captureEphemeralViewport({
+      captureMode: 'viewport',
+      standardSize: { w: maxPx, h: Math.round(maxPx * 0.625) },
+      ...(signal ? { signal } : {}),
+    })
+    return {
+      status: 'captured',
+      camera: 'current',
+      size: { w: capture.width, h: capture.height },
+      previews: [
+        {
+          label: `Current 3D viewport (${capture.width}x${capture.height})`,
+          image: capture.dataUrl,
+        },
+      ],
+    }
+  }
+
   const before = getSceneDocument()
   const plan = sceneViewPlan(before.nodes, args as never)
   const isOrtho = plan.pose.projection === 'orthographic'
@@ -349,16 +378,24 @@ async function executeGenerateDesignImage(
     useCurrentViewAsReference?: boolean
   },
   imageConfig?: ImageClientConfig,
+  signal?: AbortSignal,
 ): Promise<Record<string, unknown>> {
+  if (signal?.aborted) {
+    return { error: 'The user stopped this run. Image generation skipped.', aborted: true }
+  }
   let referenceImage: string | undefined
   if (args.useCurrentViewAsReference) {
     try {
       const captured = await captureEphemeralViewport({
         captureMode: 'standard',
         standardSize: { w: 1280, h: 800 },
+        ...(signal ? { signal } : {}),
       })
       referenceImage = captured.dataUrl
     } catch {
+      if (signal?.aborted) {
+        return { error: 'The user stopped this run. Image generation skipped.', aborted: true }
+      }
       // Fallback cleanly to text-to-image if no 3D canvas is mounted yet.
       referenceImage = undefined
     }
@@ -374,6 +411,7 @@ async function executeGenerateDesignImage(
       ...(referenceImage ? { referenceImage } : {}),
       ...(imageConfig ? { config: imageConfig } : {}),
     }),
+    ...(signal ? { signal } : {}),
   })
   const body = (await response.json().catch(() => null)) as {
     imageDataUrl?: string
@@ -444,6 +482,7 @@ export async function executeHouseAgentTool(
         useCurrentViewAsReference?: boolean
       },
       imageConfig,
+      signal,
     )
   }
   if (name === 'view_scene') {

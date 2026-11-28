@@ -423,13 +423,13 @@ msgstr "Renommer le projet"
 msgid "app.editorNavbar.share"
 msgstr "Partager"
 
-# Source-Hash: 89ad8d75e7d3bb8c
+# Source-Hash: 4bbf852f2e423f60
 # Review: required
-# English: "Tool activity"
-#: apps/editor/components/house-agent-panel.tsx
+# English: "Tool details"
+#: apps/editor/components/house-agent-activity.tsx
 #, fuzzy
-msgid "app.houseAgent.actions"
-msgstr "Activité des outils"
+msgid "app.houseAgent.activity.details"
+msgstr "Détails de l’outil"
 
 # Source-Hash: 0ee699eacef84045
 # Review: required
@@ -479,6 +479,14 @@ msgstr "Confirmer le plan et construire"
 msgid "app.houseAgent.captureView"
 msgstr "Capturer la vue 3D actuelle"
 
+# Source-Hash: 0adf70d5dd00616b
+# Review: required
+# English: "Chat"
+#: apps/editor/components/scene-loader.tsx
+#, fuzzy
+msgid "app.houseAgent.chatTab"
+msgstr "Chat"
+
 # Source-Hash: 385af15767165040
 # Review: required
 # English: "Close agent panel"
@@ -486,6 +494,38 @@ msgstr "Capturer la vue 3D actuelle"
 #, fuzzy
 msgid "app.houseAgent.close"
 msgstr "Fermer le panneau de l’agent"
+
+# Source-Hash: 66aac700943183a8
+# Review: required
+# English: "Scene selection attached"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.context.attached"
+msgstr "Sélection de scène jointe"
+
+# Source-Hash: f89e834e69107bd8
+# Review: required
+# English: "Plan furnishings"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.context.furnish"
+msgstr "Planifier l’ameublement"
+
+# Source-Hash: f6d44398a4020fa0
+# Review: required
+# English: "Inspect selection / floor"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.context.inspect"
+msgstr "Inspecter la sélection / l’étage"
+
+# Source-Hash: baa9ac78b38d61ec
+# Review: required
+# English: "Current selection will accompany your message"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.context.selected"
+msgstr "La sélection actuelle accompagnera votre message"
 
 # Source-Hash: 158e87eaccb70755
 # Review: required
@@ -606,6 +646,46 @@ msgstr "Crée un salon lumineux de 6m x 5m avec canapé d’angle, table basse, 
 #, fuzzy
 msgid "app.houseAgent.empty.card.livingTitle"
 msgstr "Créer un salon"
+
+# Source-Hash: 1511421884a170b8
+# Review: required
+# English: "No saved conversations yet."
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.history.empty"
+msgstr "Aucune conversation enregistrée pour le moment."
+
+# Source-Hash: e62d472d7d883ef5
+# Review: required
+# English: "Local conversation history could not be opened."
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.history.failed"
+msgstr "Impossible d’ouvrir l’historique local des conversations."
+
+# Source-Hash: 9cba2d619d5ef48e
+# Review: required
+# English: "Saved on this browser for this project. Opening a chat does not restore scene geometry."
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.history.local"
+msgstr "Enregistré dans ce navigateur pour ce projet. L’ouverture d’une discussion ne restaure pas la géométrie."
+
+# Source-Hash: ec5b89227ad8baed
+# Review: required
+# English: "The response is ready, but local history could not be saved."
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.history.saveFailed"
+msgstr "La réponse est prête, mais l’historique local n’a pas pu être enregistré."
+
+# Source-Hash: 2b4b831ae8144428
+# Review: required
+# English: "Chat history"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.history.title"
+msgstr "Historique des discussions"
 
 # Source-Hash: 7f5fce723d7200af
 # Review: required
@@ -1376,6 +1456,14 @@ msgstr "Modèle et portée"
 msgid "app.houseAgent.openImageStudio"
 msgstr "Studio de conception d’images (rendus et plans)"
 
+# Source-Hash: d9cc43c10f1bc3b0
+# Review: required
+# English: "Open items"
+#: apps/editor/components/house-agent-panel.tsx
+#, fuzzy
+msgid "app.houseAgent.openItems"
+msgstr "Points en suspens"
+
 # Source-Hash: ab1392b2993e304a
 # Review: required
 # English: "Pick scene guides, 3D assets & materials"
@@ -1383,6 +1471,46 @@ msgstr "Studio de conception d’images (rendus et plans)"
 #, fuzzy
 msgid "app.houseAgent.openPicker"
 msgstr "Choisir guides, objets 3D et matériaux"
+
+# Source-Hash: 37bf97f64f7a1a84
+# Review: required
+# English: "Check result"
+#: apps/editor/components/house-agent-activity.tsx
+#, fuzzy
+msgid "app.houseAgent.phase.check"
+msgstr "Vérifier le résultat"
+
+# Source-Hash: db6c142eb020745c
+# Review: required
+# English: "Apply finishes"
+#: apps/editor/components/house-agent-activity.tsx
+#, fuzzy
+msgid "app.houseAgent.phase.finish"
+msgstr "Appliquer les finitions"
+
+# Source-Hash: 18fca80a22d46089
+# Review: required
+# English: "Furnish rooms"
+#: apps/editor/components/house-agent-activity.tsx
+#, fuzzy
+msgid "app.houseAgent.phase.furnish"
+msgstr "Meubler les pièces"
+
+# Source-Hash: 5189fb62bb52c1f6
+# Review: required
+# English: "Read & plan"
+#: apps/editor/components/house-agent-activity.tsx
+#, fuzzy
+msgid "app.houseAgent.phase.inspect"
+msgstr "Lire et planifier"
+
+# Source-Hash: 27008e845689e2df
+# Review: required
+# English: "Build structure"
+#: apps/editor/components/house-agent-activity.tsx
+#, fuzzy
+msgid "app.houseAgent.phase.structure"
+msgstr "Construire la structure"
 
 # Source-Hash: d34422ce86be73c4
 # Review: required
@@ -1590,7 +1718,7 @@ msgstr "Unité"
 #: apps/editor/components/house-agent-panel.tsx
 #, fuzzy
 msgid "app.houseAgent.privacy"
-msgstr "Les messages et images sont envoyés au modèle configuré lors de l’envoi. Cette conversation dure jusqu’au rechargement."
+msgstr "Les messages et les images sont envoyés à votre modèle configuré lors de l’envoi. Les conversations terminées sont enregistrées dans ce navigateur pour ce projet."
 
 # Source-Hash: e57eb1081bcecda7
 # Review: required
@@ -1916,7 +2044,6 @@ msgstr "Studio Image"
 # Review: required
 # English: "House Agent"
 #: apps/editor/components/house-agent-panel.tsx
-#: apps/editor/components/scene-loader.tsx
 #, fuzzy
 msgid "app.houseAgent.title"
 msgstr "Agent maison"
