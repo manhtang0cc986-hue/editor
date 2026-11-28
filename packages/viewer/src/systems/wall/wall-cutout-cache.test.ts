@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import { fileURLToPath } from 'node:url'
 import {
   BuildingNode,
   LevelNode,
@@ -873,7 +874,7 @@ test('hysteresis holds both sides near zero and switches beyond the band', () =>
 })
 
 test('legacy wall extensions preserve the viewer-to-nodes dependency boundary', async () => {
-  const root = new URL('../../', import.meta.url).pathname
+  const root = fileURLToPath(new URL('../../', import.meta.url))
   for (const file of new Bun.Glob('**/*.{ts,tsx}').scanSync(root)) {
     const source = await Bun.file(`${root}${file}`).text()
     expect(source).not.toMatch(/(?:from|import\s*\()\s*['"]@pascal-app\/nodes/)

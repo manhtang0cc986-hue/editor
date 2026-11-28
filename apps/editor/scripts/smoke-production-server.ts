@@ -88,12 +88,15 @@ try {
     expect(policy === 'frame-ancestors *', `content-security-policy: ${policy}`)
   })
 
-  await check('the proxy passes ?lang to the server-rendered layout', async () => {
-    for (const [query, lang] of [
-      ['', 'en'],
-      ['?lang=fr', 'fr'],
+  await check('the proxy passes the selected language to the server-rendered layout', async () => {
+    for (const { query, lang, browserLanguage } of [
+      { query: '', lang: 'zh-CN' },
+      { query: '', lang: 'en', browserLanguage: 'en-US' },
+      { query: '?lang=fr', lang: 'fr', browserLanguage: 'en-US' },
     ]) {
-      const response = await get(`${origin}/${query}`)
+      const response = await get(`${origin}/${query}`, {
+        headers: browserLanguage ? { 'accept-language': browserLanguage } : {},
+      })
       const html = await response.text()
       expect(response.status === 200, `/${query}: status ${response.status}`)
       expect(
@@ -109,6 +112,9 @@ try {
       page.status === 307 && page.location?.endsWith('/setup') === true,
       `page: ${page.status} → ${page.location}`,
     )
+    const logo = await requestWithHost('/model-logos/openai.svg', 'editor.example.com')
+    expect(logo.status === 200 && logo.body.includes('<svg'), `model logo: ${logo.status}`)
+
     const api = await requestWithHost('/api/plugins/mint/manifest', 'editor.example.com')
     expect(
       api.status === 503 && api.body.includes('self_host_unconfigured'),

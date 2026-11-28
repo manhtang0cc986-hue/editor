@@ -1,11 +1,12 @@
 import { expect, test } from 'bun:test'
+import { fileURLToPath } from 'node:url'
 
 test.each(['./node.ts', '../schema/types.ts'])(
   'a clean browser bundle can initialize %s without loading scene runtime',
   async (entry) => {
     const loaded = new Set<string>()
     const build = await Bun.build({
-      entrypoints: [new URL(entry, import.meta.url).pathname],
+      entrypoints: [fileURLToPath(new URL(entry, import.meta.url))],
       target: 'browser',
       plugins: [
         {

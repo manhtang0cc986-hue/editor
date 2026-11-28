@@ -62,6 +62,6 @@ export const config = {
   // live, never by a file extension, since dynamic route segments accept dots.
   // Keep this in sync with the folders in `public/`.
   matcher: [
-    '/((?!_next/|favicon\\.ico$|(?:audios|demos|fonts|hdri|icons|items|material)/|[^/]+\\.svg$).*)',
+    '/((?!_next/|favicon\\.ico$|(?:audios|demos|fonts|hdri|icons|items|material|model-logos)/|[^/]+\\.svg$).*)',
   ],
 }

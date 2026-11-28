@@ -2,7 +2,7 @@ import { afterEach, expect, test } from 'bun:test'
 import { readdirSync } from 'node:fs'
 import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server'
 import { issueSession, SESSION_COOKIE } from './lib/self-host-auth'
-import { resolveUiLocale } from './lib/ui-locale'
+import { resolveAcceptLanguage, resolveUiLocale } from './lib/ui-locale'
 import { config, gateRequest } from './proxy'
 
 const OLD_ENV = { ...process.env }
@@ -103,6 +103,7 @@ test('Next and public/ static assets skip the proxy', () => {
     '/hdri/venice_sunset_1k.hdr',
     '/icons/column.webp',
     '/items/round-carpet/model.glb',
+    '/model-logos/openai.svg',
     '/material/concrete/prepared_drywall/prepared_drywall_normal_512.ktx2',
   ]) {
     expect([path, unstable_doesMiddlewareMatch({ config, url: path })]).toEqual([path, false])
@@ -140,7 +141,14 @@ test('loopback and an upstream proxy are open', () => {
 
 test('UI locale canonicalization is deterministic for server rendering', () => {
   expect(resolveUiLocale('fr')).toBe('fr')
-  expect(resolveUiLocale('zh-hans-cn')).toBe('zh-Hans-CN')
-  expect(resolveUiLocale('')).toBe('en')
-  expect(resolveUiLocale('not_a_locale')).toBe('en')
+  expect(resolveUiLocale('zh-hans-cn')).toBe('zh-CN')
+  expect(resolveUiLocale('')).toBe('zh-CN')
+  expect(resolveUiLocale('not_a_locale')).toBe('zh-CN')
+})
+
+test('browser language negotiation respects supported locales and request weights', () => {
+  expect(resolveAcceptLanguage('ZH-HANS-CN, en;q=0.8')).toBe('zh-CN')
+  expect(resolveAcceptLanguage('de, fr ; q=0.8, en;q=0.5')).toBe('fr')
+  expect(resolveAcceptLanguage('fr;q=0, en;q=0.5')).toBe('en')
+  expect(resolveAcceptLanguage('de')).toBe('zh-CN')
 })

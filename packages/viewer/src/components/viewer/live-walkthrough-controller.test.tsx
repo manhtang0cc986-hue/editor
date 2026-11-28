@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, test } from 'bun:test'
+import { fileURLToPath } from 'node:url'
 import {
   DoorNode,
   nodeRegistry,
@@ -881,7 +882,7 @@ test('shutters button and desktop F activate the same toggle and show only usabl
         process.execPath,
         'test',
         '--preload',
-        new URL('./__tests__/walkthrough-chrome.tsx', import.meta.url).pathname,
+        fileURLToPath(new URL('./__tests__/walkthrough-chrome.tsx', import.meta.url)),
         import.meta.path,
         '--test-name-pattern',
         'shutters button and desktop F',

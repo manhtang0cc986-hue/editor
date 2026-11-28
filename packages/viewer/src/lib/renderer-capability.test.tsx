@@ -338,6 +338,24 @@ describe('GPU renderer capability and initialization', () => {
     expect(dispose).toHaveBeenCalledTimes(1)
   })
 
+  test('keeps WebGL available if the temporary context cannot be released', async () => {
+    const probeCanvas = canvasWithContexts({
+      webgl2: {
+        getExtension: () => {
+          throw new Error('Context cleanup unavailable')
+        },
+      },
+    })
+
+    const result = await initializeGpuRenderer({
+      createRenderer: () => ({ init: async () => undefined }),
+      gpu: null,
+      probeCanvas,
+    })
+
+    expect(result).toMatchObject({ status: 'ready', backend: 'webgl' })
+  })
+
   test('releases the temporary WebGL2 probe context after capability detection', async () => {
     const loseContext = mock(() => undefined)
     const probeCanvas = canvasWithContexts({

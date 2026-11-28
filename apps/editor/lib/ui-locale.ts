@@ -14,47 +14,38 @@ export const LOCALE_LABELS: Record<SupportedLocale, string> = {
 /** Default locale for the application. */
 export const DEFAULT_LOCALE: SupportedLocale = 'zh-CN'
 
-/**
- * Resolve a UI locale from a raw locale string (e.g. from a URL param or
- * Accept-Language header). Falls back to DEFAULT_LOCALE when nothing matches.
- */
-export function resolveUiLocale(value: string | null | undefined): string {
+function matchUiLocale(value: string | null | undefined): SupportedLocale | undefined {
   const requested = value?.trim()
-  if (!requested) return DEFAULT_LOCALE
+  if (!requested) return undefined
   try {
     const canonical = Intl.getCanonicalLocales(requested)[0]
-    if (!canonical) return DEFAULT_LOCALE
-    // Exact match first
-    if ((SUPPORTED_LOCALES as readonly string[]).includes(canonical)) return canonical
-    // Language-only prefix match (e.g. "zh" → "zh-CN", "en-US" → "en")
-    const prefix = canonical.split('-')[0]
-    const match = SUPPORTED_LOCALES.find(
-      (locale) => locale === prefix || locale.split('-')[0] === prefix,
+    if (!canonical) return undefined
+    const exact = SUPPORTED_LOCALES.find((locale) => locale === canonical)
+    return (
+      exact ?? SUPPORTED_LOCALES.find((locale) => locale.split('-')[0] === canonical.split('-')[0])
     )
-    return match ?? DEFAULT_LOCALE
   } catch {
-    return DEFAULT_LOCALE
+    return undefined
   }
 }
 
-/**
- * Parse an Accept-Language header and return the best matching supported locale.
- * Returns DEFAULT_LOCALE when nothing matches.
- */
+export function resolveUiLocale(value: string | null | undefined): SupportedLocale {
+  return matchUiLocale(value) ?? DEFAULT_LOCALE
+}
+
 export function resolveAcceptLanguage(acceptLanguage: string | null | undefined): SupportedLocale {
-  if (!acceptLanguage) return DEFAULT_LOCALE
-  const entries = acceptLanguage
+  const entries = (acceptLanguage ?? '')
     .split(',')
     .map((entry) => {
-      const [lang, q] = entry.trim().split(';q=')
-      return { lang: lang?.trim() ?? '', q: q ? Number.parseFloat(q) : 1.0 }
+      const [lang, weight] = entry.split(';').map((part) => part.trim())
+      return { lang, q: weight === undefined ? 1 : Number(/^q\s*=\s*(.*)$/i.exec(weight)?.[1]) }
     })
-    .filter((e) => e.lang)
+    .filter(({ lang, q }) => lang && q > 0 && q <= 1)
     .sort((a, b) => b.q - a.q)
 
   for (const { lang } of entries) {
-    const resolved = resolveUiLocale(lang)
-    if (resolved !== DEFAULT_LOCALE || lang.startsWith('zh')) return resolved as SupportedLocale
+    const match = matchUiLocale(lang)
+    if (match) return match
   }
   return DEFAULT_LOCALE
 }

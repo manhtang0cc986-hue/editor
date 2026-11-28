@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test'
+import { fileURLToPath } from 'node:url'
 
 // Review guardrail for the writers contract (DECISIONS.md E-012, wiki/architecture/space-detection.md):
 // derived construction — a slab or ceiling marked `boundary: 'auto'` or the
@@ -53,7 +54,7 @@ function isFixtureOrTest(path: string) {
 const PACKAGE_SOURCES = 'packages/*/src/**/*.{ts,tsx}'
 
 function repoRoot() {
-  return new URL('../../../../', import.meta.url).pathname
+  return fileURLToPath(new URL('../../../../', import.meta.url))
 }
 
 test('only the structure kernel and the load migrations author derived construction', async () => {

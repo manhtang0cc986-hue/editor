@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, test } from 'bun:test'
+import { fileURLToPath } from 'node:url'
 import * as Bun from 'bun'
 import {
   type AnyNode,
@@ -405,7 +406,7 @@ test('plate elevation follows persisted terrain and ignores live uncommitted ter
 test('scene-migrations exports the orchestrator through a clean Node bundle', async () => {
   const loaded = new Set<string>()
   const build = await Bun.build({
-    entrypoints: [new URL('../utils/scene-migrations.ts', import.meta.url).pathname],
+    entrypoints: [fileURLToPath(new URL('../utils/scene-migrations.ts', import.meta.url))],
     target: 'node',
     plugins: [
       {

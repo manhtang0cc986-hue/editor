@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test'
 import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/postcss'
 import postcss from 'postcss'
 
@@ -7,7 +8,7 @@ const stylesheet = new URL('../app/globals.css', import.meta.url)
 
 test('the editor stylesheet emits shared layout, theme and reduced-motion styles', async () => {
   const result = await postcss([tailwindcss()]).process(await readFile(stylesheet, 'utf8'), {
-    from: stylesheet.pathname,
+    from: fileURLToPath(stylesheet),
   })
 
   expect(result.warnings()).toEqual([])
@@ -20,7 +21,7 @@ test('the editor stylesheet emits shared layout, theme and reduced-motion styles
 test('zero spacing remains a length in calc and shadows support fractional opacity', async () => {
   const result = await postcss([tailwindcss({ optimize: false })]).process(
     '@import "tailwindcss"; @source inline("w-[calc(--spacing(0)+1px)] shadow-sm/12.5");',
-    { from: stylesheet.pathname },
+    { from: fileURLToPath(stylesheet) },
   )
   const values: string[] = []
   result.root.walkDecls((declaration) => {

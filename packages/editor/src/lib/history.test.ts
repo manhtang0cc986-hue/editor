@@ -1,6 +1,9 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, setDefaultTimeout, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+
+// Each case boots a fresh Bun process and loads the editor and viewer packages.
+setDefaultTimeout(30_000)
 
 function runSourceHistoryTest(body: string) {
   const cache = join(import.meta.dir, '.turbo')
@@ -34,6 +37,8 @@ function runSourceHistoryTest(body: string) {
         ]),
       )
       function mockShared(specifier, factory) {
+        // Bun can resolve bare imports independently of their file paths.
+        mock.module(specifier, factory)
         for (const path of sharedPaths.get(specifier)) mock.module(path, factory)
       }
       async function importShared(specifier) {

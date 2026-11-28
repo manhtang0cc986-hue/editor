@@ -81,12 +81,14 @@ async function requestWebGpuDevice(gpu: RendererGpu, powerPreference?: RendererP
 }
 
 function releaseProbeContext(context: unknown) {
-  const loseContext = (
-    context as { getExtension?: (name: string) => { loseContext?: () => void } | null }
-  ).getExtension?.('WEBGL_lose_context')
   try {
-    loseContext?.loseContext?.()
-  } catch {}
+    const extension = (
+      context as { getExtension?: (name: string) => { loseContext?: () => void } | null }
+    ).getExtension?.('WEBGL_lose_context')
+    extension?.loseContext?.()
+  } catch {
+    // Releasing a temporary probe is best effort. The context was already created.
+  }
 }
 
 export async function detectRendererCapability({
